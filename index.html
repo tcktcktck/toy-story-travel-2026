@@ -60,12 +60,12 @@
 
                 <div v-if="isEditing[page.label]" class="space-y-3 pb-20">
                   <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
-                    <input v-model="item.title" class="edit-input" :placeholder="page.label === 'Plan' ? 'Time (e.g. 09:00)' : 'Title / Flight No.'">
+                    <input v-model="item.title" class="edit-input" :placeholder="page.label === 'Plan' ? 'Time (e.g. 09:00)' : 'Title / No.'">
                     <textarea v-model="item.content" class="edit-input text-xs" :placeholder="'Add ' + page.label + ' details...'"></textarea>
                     <button @click="removeItem(page.label, idx)" class="absolute top-2 right-2 text-toyRed p-1 opacity-50">✕</button>
                   </div>
                   <button @click="addItem(page.label)" class="w-full py-3 border-2 border-dashed rounded-xl text-xs font-black" :style="{ color: page.color, borderColor: page.color }">
-                    + ADD {{ page.label.toUpperCase() }}
+                    + ADD ITEM
                   </button>
                 </div>
 
@@ -73,10 +73,6 @@
                   <div v-for="item in getSortedData(page.label)" :key="item.title" class="flex gap-4 p-4 border-b border-slate-50 items-start">
                     <span class="font-black text-xs w-16 pt-1 shrink-0" :style="{ color: page.color }">{{item.title}}</span>
                     <p class="font-bold text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{item.content}}</p>
-                  </div>
-                  <div v-if="!getSortedData(page.label).length" class="flex flex-col items-center justify-center py-20 opacity-20">
-                    <i :class="page.icon" class="text-5xl mb-2"></i>
-                    <p class="text-xs font-black">EMPTY</p>
                   </div>
                 </div>
 
@@ -120,7 +116,7 @@
         const currentDate = ref('5/21');
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
         const isEditing = ref({});
-        const travelData = ref({});
+        const travelData = ref({ Plan: {}, Tickets: [], Flight: [], Hotel: [], Map: [], Pack: [], Budget: [] });
 
         const navItems = [
           { label: 'Plan', icon: 'fas fa-calendar-day', color: '#F1C40F' },
@@ -132,37 +128,48 @@
           { label: 'Budget', icon: 'fas fa-piggy-bank', color: '#16A085' }
         ];
 
-        // 獲取原始數據（用於編輯）
         const getRawData = (label) => {
-          if (!travelData.value[label]) travelData.value[label] = (label === 'Plan' ? {} : []);
           if (label === 'Plan') {
-            if (!travelData.value['Plan'][currentDate.value]) travelData.value['Plan'][currentDate.value] = [];
-            return travelData.value['Plan'][currentDate.value];
+            if (!travelData.value.Plan[currentDate.value]) travelData.value.Plan[currentDate.value] = [];
+            return travelData.value.Plan[currentDate.value];
           }
+          if (!travelData.value[label]) travelData.value[label] = [];
           return travelData.value[label];
         };
 
-        // 【核心邏輯】獲取排序後的數據（用於顯示）
         const getSortedData = (label) => {
-          let data = getRawData(label);
-          // 根據 title (時間或編號) 進行順時序排序
-          return [...data].sort((a, b) => {
-            return (a.title || "").localeCompare(b.title || "", undefined, {numeric: true, sensitivity: 'base'});
-          });
+          const data = getRawData(label);
+          return [...data].sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, {numeric: true}));
         };
 
         const loadFirebase = () => {
           db.ref('universalData').on('value', (s) => {
-            travelData.value = s.val() || {};
+            const val = s.val();
+            if (val) {
+              // 確保結構完整
+              navItems.forEach(n => { if(!val[n.label]) val[n.label] = (n.label === 'Plan' ? {} : []); });
+              travelData.value = val;
+            }
             loading.value = false;
           });
         };
 
         const toggleEdit = (label) => {
-          isEditing.value[label] = !isEditing.value[label];
-          if(!isEditing.value[label]) {
+          if (isEditing.value[label]) {
+            // 保存模式
             loading.value = true;
-            db.ref('universalData').set(travelData.value).then(() => loading.value = false);
+            // 關鍵修正：將 Proxy 物件轉為純 JSON 物件再上傳
+            const cleanData = JSON.parse(JSON.stringify(travelData.value));
+            db.ref('universalData').set(cleanData).then(() => {
+              loading.value = false;
+              isEditing.value[label] = false;
+            }).catch(err => {
+              alert("儲存失敗：" + err.message);
+              loading.value = false;
+            });
+          } else {
+            // 進入編輯
+            isEditing.value[label] = true;
           }
         };
 
