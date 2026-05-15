@@ -59,7 +59,7 @@
 
   <div id="init-loader" class="loading-screen">
     <i class="fas fa-circle-notch animate-spin text-4xl mb-4"></i>
-    <p class="font-black italic uppercase tracking-widest text-[10px]">Establishing Link...</p>
+    <p class="font-black italic uppercase tracking-widest text-[10px]">Syncing Data...</p>
   </div>
 
   <div id="app" class="app-container" v-cloak>
@@ -103,10 +103,10 @@
 
                   <template v-if="isEditing[page.label]">
                     <div v-for="(item, idx) in getRawData(page.label)" :key="'edit-' + page.label + idx" class="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl mb-4 relative border border-slate-200 dark:border-slate-700">
-                      <input v-model="item.time" class="input-toy" placeholder="TIME (e.g. 14:00)">
-                      <input v-model="item.location" class="input-toy" placeholder="MISSION/LOCATION">
+                      <input v-model="item.time" class="input-toy" placeholder="TIME">
+                      <input v-model="item.location" class="input-toy" placeholder="MISSION">
                       <textarea v-model="item.note" class="input-toy mb-0 text-xs" placeholder="NOTES" rows="2"></textarea>
-                      <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-toyRed text-white w-8 h-8 rounded-full border-2 border-white shadow-lg">×</button>
+                      <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-toyRed text-white w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center">×</button>
                     </div>
                     <button @click="addItem(page.label)" :key="'add-' + page.label" class="w-full py-4 border-2 border-dashed rounded-2xl font-black text-xs uppercase" :style="{ color: page.color, borderColor: page.color }">+ Add Mission</button>
                   </template>
@@ -134,25 +134,21 @@
     </main>
 
     <nav class="bg-white dark:bg-slate-950 flex border-t-2 border-slate-100 dark:border-slate-800 shrink-0 z-[100] relative" 
-         style="min-height: 90px; padding-bottom: env(safe-area-inset-bottom);">
+         style="min-height: 85px; padding-bottom: env(safe-area-inset-bottom);">
       <div v-for="(nav, idx) in navItems" :key="nav.label" @click="goTo(idx)" 
-           class="flex-1 flex flex-col items-center justify-center cursor-pointer min-h-[90px] transition-all" 
-           :style="{ opacity: activeIdx === idx ? 1 : 0.3 }">
-        <i :class="nav.icon" class="text-xl mb-1" :style="{ color: activeIdx === idx ? nav.color : '' }"></i>
-        <span class="text-[10px] font-black uppercase tracking-tighter" :style="{ color: activeIdx === idx ? nav.color : '' }">{{ nav.label }}</span>
+           class="flex-1 flex flex-col items-center justify-center cursor-pointer min-h-[85px] transition-all relative" 
+           :class="activeIdx === idx ? 'scale-110' : 'opacity-30 scale-90'">
+        <i :class="nav.icon" class="text-lg mb-1" :style="{ color: activeIdx === idx ? nav.color : '' }"></i>
+        <span class="text-[9px] font-black uppercase tracking-tight text-center px-1" 
+              :style="{ color: activeIdx === idx ? nav.color : '' }">{{ nav.label }}</span>
+        <div v-if="activeIdx === idx" class="w-1 h-1 rounded-full mt-1" :style="{ backgroundColor: nav.color }"></div>
       </div>
     </nav>
   </div>
 
   <script>
     const { createApp, ref, onMounted } = Vue;
-
-    // Firebase 配置
-    const FIREBASE_CONFIG = { 
-      apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", 
-      authDomain: "toystorytravel.firebaseapp.com", 
-      databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" 
-    };
+    const FIREBASE_CONFIG = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(FIREBASE_CONFIG);
     const db = firebase.database();
 
@@ -164,10 +160,7 @@
         const isWiggling = ref(false);
         const isEditing = ref({});
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
-        
-        const travelData = ref({ 
-          Plan: {}, Tickets: [], Hotel: [], Budget: [], Food: [], Traffic: [], List: [] 
-        });
+        const travelData = ref({ Plan: {}, Tickets: [], Hotel: [], Budget: [], Food: [], Traffic: [], List: [] });
 
         const navItems = [
           { label: 'Plan', icon: 'fas fa-map-marked-alt', color: '#F1C40F' },
@@ -179,10 +172,7 @@
           { label: 'List', icon: 'fas fa-clipboard-list', color: '#16A085' }
         ];
 
-        const getRawData = (label) => {
-          return label === 'Plan' ? (travelData.value.Plan[currentDate.value] || []) : (travelData.value[label] || []);
-        };
-
+        const getRawData = (label) => label === 'Plan' ? (travelData.value.Plan[currentDate.value] || []) : (travelData.value[label] || []);
         const getSortedData = (label) => {
           const data = getRawData(label);
           if (label === 'Plan') return [...data].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
@@ -191,60 +181,34 @@
         
         const toggleEdit = async (label) => {
           if (isEditing.value[label]) {
-            // 保存到 Firebase
             await db.ref('universalData').set(JSON.parse(JSON.stringify(travelData.value)));
             isEditing.value[label] = false;
-          } else { 
-            isEditing.value[label] = true; 
-          }
+          } else { isEditing.value[label] = true; }
         };
 
         const addItem = (label) => {
-          if (label === 'Plan' && !travelData.value.Plan[currentDate.value]) {
-            travelData.value.Plan[currentDate.value] = [];
-          }
+          if (label === 'Plan' && !travelData.value.Plan[currentDate.value]) travelData.value.Plan[currentDate.value] = [];
           getRawData(label).push({ id: Date.now(), time: '', location: '', note: '' });
         };
-
-        const removeItem = (label, idx) => {
-          getRawData(label).splice(idx, 1);
-        };
-
+        const removeItem = (label, idx) => getRawData(label).splice(idx, 1);
         const goTo = (idx) => swiperInstance.value.slideTo(idx);
-        
-        const triggerLogoJoy = () => { 
-          isWiggling.value = true; 
-          setTimeout(() => isWiggling.value = false, 700); 
-        };
+        const triggerLogoJoy = () => { isWiggling.value = true; setTimeout(() => isWiggling.value = false, 700); };
 
         onMounted(() => {
-          // Firebase 實時監聽
           db.ref('universalData').on('value', (s) => { 
             if(s.val()) travelData.value = s.val();
-            // 數據載入後隱藏 Loader
             const loader = document.getElementById('init-loader');
-            if(loader) {
-              loader.style.opacity = '0';
-              setTimeout(() => loader.remove(), 400);
-            }
+            if(loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 400); }
           });
-          
-          // 初始化 Swiper
           swiperInstance.value = new Swiper(".mySwiper", { 
             speed: 350,
             noSwiping: true,
             noSwipingClass: 'swiper-no-swiping',
-            on: { 
-              slideChange: function() { activeIdx.value = this.activeIndex; } 
-            } 
+            on: { slideChange: function() { activeIdx.value = this.activeIndex; } } 
           });
         });
 
-        return { 
-          travelData, isEditing, activeIdx, goTo, toggleEdit, 
-          currentDate, availableDates, navItems, getSortedData, 
-          getRawData, addItem, removeItem, triggerLogoJoy, isWiggling 
-        }
+        return { travelData, isEditing, activeIdx, goTo, toggleEdit, currentDate, availableDates, navItems, getSortedData, getRawData, addItem, removeItem, triggerLogoJoy, isWiggling }
       }
     }).mount('#app')
   </script>
