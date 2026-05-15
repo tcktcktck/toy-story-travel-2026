@@ -22,40 +22,47 @@
   <style type="text/tailwindcss">
     @layer components {
       .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #E0F2FE; }
-      .nav-item { @apply flex flex-col items-center justify-center cursor-pointer text-slate-300 flex-1 transition-all; }
-      .nav-item.active { @apply text-toyBlue scale-110; }
+      .nav-item { @apply flex flex-col items-center justify-center cursor-pointer flex-1 transition-all duration-300; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
-      .edit-input { @apply w-full p-2 mb-2 border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm font-bold bg-blue-50/50; }
       .date-btn { @apply px-4 py-1.5 rounded-xl font-black text-[10px] transition-all border-2 shrink-0; }
       .date-btn-active { @apply bg-toyYellow text-white border-toyYellow shadow-md; }
       .date-btn-inactive { @apply bg-white text-slate-400 border-slate-100; }
     }
     [v-cloak] { display: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* Logo 放大效果 */
+    .logo-container img {
+      height: 55px; 
+      width: auto; 
+      transform: scale(1.4); 
+      transform-origin: center;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+    }
   </style>
 </head>
 <body class="overscroll-none">
 
   <div id="app" class="app-container" v-cloak>
     
-    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative" style="height: 70px;">
-      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" 
-           alt="Euro 2026" 
-           class="object-contain" 
-           style="height: 55px; width: auto;">
-      <div v-if="loading" class="absolute right-4"><div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div></div>
+    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-[100]" style="height: 75px;">
+      <div class="logo-container">
+        <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026">
+      </div>
+      <div v-if="loading" class="absolute right-6"><div class="w-2.5 h-2.5 bg-toyGreen rounded-full animate-ping"></div></div>
     </header>
 
-    <main class="flex-1 w-full overflow-hidden">
+    <main class="flex-1 w-full overflow-hidden relative">
       <div class="swiper mySwiper h-full w-full pt-4">
         <div class="swiper-wrapper">
           
           <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyYellow" 
-                 style="height: calc(100% - 20px);">
-              <div class="flex justify-between items-center mb-2">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyYellow h-[calc(100%-25px)]">
+              <div class="flex justify-between items-center mb-2 shrink-0">
                 <h2 class="text-xl font-black text-toyYellow uppercase">Plan</h2>
-                <button @click="toggleEdit('itinerary')"><i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
+                <button @click="toggleEdit('itinerary')">
+                  <i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i>
+                </button>
               </div>
               
               <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1 swiper-no-swiping border-b border-slate-50 shrink-0">
@@ -65,73 +72,89 @@
               <div class="flex-1 overflow-y-auto pr-1 no-scrollbar" style="-webkit-overflow-scrolling: touch;">
                 <div v-if="isEditing.itinerary" class="space-y-3 pb-10">
                   <div v-for="(item, idx) in travelData.itinerary[currentDate]" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
-                    <input v-model="item.time" class="edit-input w-24" placeholder="09:00">
-                    <textarea v-model="item.activity" class="edit-input text-xs" placeholder="Add activity..."></textarea>
-                    <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed p-1">✕</button>
+                    <input v-model="item.time" class="w-full p-2 mb-1 border-b font-black text-toyWoody outline-none bg-transparent" placeholder="09:00">
+                    <textarea v-model="item.activity" class="w-full p-2 text-xs font-bold text-slate-600 outline-none bg-transparent" placeholder="Activity..."></textarea>
+                    <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed opacity-30 hover:opacity-100">✕</button>
                   </div>
-                  <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ ADD</button>
+                  <button @click="addItem('itinerary')" class="w-full py-3 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ ADD PLAN</button>
                 </div>
                 <div v-else class="space-y-1 pb-10">
                   <div v-for="item in sortedItinerary" :key="item.time" class="flex gap-4 p-4 border-b border-slate-50 items-start">
                     <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
-                    <p class="font-bold text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{item.activity}}</p>
+                    <p class="font-bold text-sm text-slate-700 leading-relaxed">{{item.activity}}</p>
                   </div>
-                  <div v-if="!sortedItinerary.length" class="text-center pt-10 text-slate-300 font-bold text-sm italic">No plans for this day yet.</div>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyRed" style="height: calc(100% - 20px);">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyRed h-[calc(100%-25px)]">
               <h2 class="text-xl font-black text-toyRed mb-4 uppercase">Tickets</h2>
               <div class="flex-1 flex flex-col items-center justify-center bg-red-50 rounded-3xl border-2 border-dashed border-red-100">
                 <i class="fas fa-ticket-alt text-4xl text-toyRed/20 mb-2"></i>
-                <p class="text-[10px] font-black text-toyRed/40 tracking-widest">TICKET REPOSITORY</p>
+                <p class="text-[10px] font-black text-toyRed/40 tracking-widest uppercase">My Tickets Area</p>
               </div>
             </div>
           </div>
 
           <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyPurple" style="height: calc(100% - 20px);">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyPurple h-[calc(100%-25px)]">
               <h2 class="text-xl font-black text-toyPurple mb-4 uppercase">Flight</h2>
-              <div class="flex-1 bg-purple-50 rounded-3xl p-6 text-center text-toyPurple/50 font-black italic pt-20">FLIGHT DATA LOADING...</div>
+              <div class="flex-1 bg-purple-50 rounded-3xl p-6 text-center text-toyPurple/50 font-black italic flex items-center justify-center">FLIGHT DATA SECTION</div>
             </div>
           </div>
 
-        </div>
+          </div>
       </div>
     </main>
 
-    <nav class="bg-white flex border-t shrink-0 z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]" 
-         style="height: calc(70px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
-      <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-day text-lg"></i><span class="nav-text">Plan</span></div>
-      <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-ticket-alt text-lg"></i><span class="nav-text">Tickets</span></div>
-      <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-plane text-lg"></i><span class="nav-text">Flight</span></div>
-      <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-hotel text-lg"></i><span class="nav-text">Hotel</span></div>
-      <div @click="goTo(4)" :class="{active: activeIdx === 4}" class="nav-item"><i class="fas fa-map-marked-alt text-lg"></i><span class="nav-text">Map</span></div>
-      <div @click="goTo(5)" :class="{active: activeIdx === 5}" class="nav-item"><i class="fas fa-suitcase text-lg"></i><span class="nav-text">Pack</span></div>
-      <div @click="goTo(6)" :class="{active: activeIdx === 6}" class="nav-item"><i class="fas fa-piggy-bank text-lg"></i><span class="nav-text">Budget</span></div>
+    <nav class="bg-white flex border-t shrink-0 z-[100] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]" 
+         style="height: calc(75px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
+      
+      <div v-for="(nav, idx) in navItems" :key="idx" 
+           @click="goTo(idx)" 
+           :class="activeIdx === idx ? 'text-toyBlue scale-110' : 'text-slate-300'"
+           class="nav-item">
+        <i :class="nav.icon + ' text-xl'"></i>
+        <span class="nav-text">{{ nav.label }}</span>
+      </div>
+
     </nav>
   </div>
 
   <script>
     const { createApp, ref, onMounted, computed } = Vue;
 
-    // Firebase 連接
-    const firebaseConfig = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", projectId: "toystorytravel", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
+    // Firebase 配置 (請確保您的 DatabaseURL 正確)
+    const firebaseConfig = { 
+      apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", 
+      authDomain: "toystorytravel.firebaseapp.com", 
+      projectId: "toystorytravel", 
+      databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" 
+    };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     createApp({
       setup() {
-        const swiperRef = ref(null);
+        const swiperInstance = ref(null);
         const activeIdx = ref(0);
         const loading = ref(true);
         const currentDate = ref('5/21');
-        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
-        const isEditing = ref({ itinerary:false });
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28'];
+        const isEditing = ref({ itinerary: false });
         const travelData = ref({ itinerary: {} });
+
+        const navItems = [
+          { label: 'Plan', icon: 'fas fa-calendar-day' },
+          { label: 'Tickets', icon: 'fas fa-ticket-alt' },
+          { label: 'Flight', icon: 'fas fa-plane' },
+          { label: 'Hotel', icon: 'fas fa-hotel' },
+          { label: 'Map', icon: 'fas fa-map-marked-alt' },
+          { label: 'Pack', icon: 'fas fa-suitcase' },
+          { label: 'Budget', icon: 'fas fa-piggy-bank' }
+        ];
 
         const sortedItinerary = computed(() => {
           const list = travelData.value.itinerary[currentDate.value] || [];
@@ -140,43 +163,48 @@
 
         const loadFirebase = () => {
           db.ref('travelData').on('value', (s) => {
-            const d = s.val() || {};
-            if(!d.itinerary) d.itinerary = {};
+            const d = s.val() || { itinerary: {} };
             availableDates.forEach(date => { if(!d.itinerary[date]) d.itinerary[date] = []; });
-            travelData.value = d; loading.value = false;
+            travelData.value = d;
+            loading.value = false;
           });
         };
 
-        const saveToFirebase = () => {
-          loading.value = true;
-          db.ref('travelData').set(travelData.value).then(() => loading.value = false);
+        const goTo = (idx) => {
+          if (swiperInstance.value) {
+            swiperInstance.value.slideTo(idx);
+            activeIdx.value = idx;
+          }
         };
 
         const toggleEdit = (p) => {
           isEditing.value[p] = !isEditing.value[p];
-          if(!isEditing.value[p]) saveToFirebase();
-        };
-
-        const addItem = (t) => {
-          if(t==='itinerary') {
-            if(!travelData.value.itinerary[currentDate.value]) travelData.value.itinerary[currentDate.value] = [];
-            travelData.value.itinerary[currentDate.value].push({time:'09:00', activity:''});
+          if(!isEditing.value[p]) {
+            loading.value = true;
+            db.ref('travelData').set(travelData.value).then(() => loading.value = false);
           }
         };
 
-        const goTo = (idx) => { swiperRef.value.slideTo(idx); activeIdx.value = idx; };
+        const addItem = (t) => {
+          if(!travelData.value.itinerary[currentDate.value]) travelData.value.itinerary[currentDate.value] = [];
+          travelData.value.itinerary[currentDate.value].push({ time: '09:00', activity: '' });
+        };
 
         onMounted(() => {
           loadFirebase();
-          swiperRef.value = new Swiper(".mySwiper", { 
-            speed: 300,
-            noSwiping: true,
-            noSwipingClass: 'swiper-no-swiping',
-            on: { slideChange: function() { activeIdx.value = this.activeIndex; } } 
+          // 初始化 Swiper 並確保它可觸控切換
+          swiperInstance.value = new Swiper(".mySwiper", { 
+            speed: 400,
+            allowTouchMove: true,
+            on: {
+              slideChange: function() {
+                activeIdx.value = this.activeIndex;
+              }
+            }
           });
         });
 
-        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, sortedItinerary }
+        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, sortedItinerary, navItems }
       }
     }).mount('#app')
   </script>
