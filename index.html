@@ -22,7 +22,8 @@
   <style type="text/tailwindcss">
     @layer components {
       .app-container { height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
-      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-[8px] border-slate-200 overflow-y-auto relative; height: calc(100svh - 320px); }
+      /* 調整卡片高度適配縮小後的 Header */
+      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-[8px] border-slate-200 overflow-y-auto relative; height: calc(100svh - 260px); }
       .nav-item { @apply flex flex-col items-center cursor-pointer transition-all duration-300 text-slate-300 flex-1; }
       .nav-item.active { @apply text-toyBlue scale-110; }
       .edit-input { @apply w-full p-2 mb-2 border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm font-bold bg-blue-50/50; }
@@ -32,18 +33,26 @@
     }
     body { background-color: #E0F2FE; background-image: radial-gradient(#fff 10%, transparent 10%); background-size: 30px 30px; margin: 0; padding: 0; overscroll-behavior: none; }
     [v-cloak] { display: none; }
-    .logo-img { mix-blend-mode: normal !important; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3)); background: transparent !important; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    .logo-img { 
+      mix-blend-mode: normal !important; 
+      filter: drop-shadow(0 4px 10px rgba(0,0,0,0.35)); 
+      background: transparent !important;
+    }
   </style>
 </head>
 <body class="touch-none">
 
   <div id="app" class="app-container" v-cloak>
-    <header class="bg-toyBlue pt-12 pb-8 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
+    <header class="bg-toyBlue pt-8 pb-4 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50 overflow-hidden">
       <div class="flex flex-col items-center justify-center">
-        <img src="pixelframe-design_26fq9zkc-removebg-preview.png?v=final" alt="Euro 2026" class="h-24 logo-img object-contain mb-2">
-        <p class="text-white text-[10px] font-black tracking-widest uppercase opacity-90 italic">Adventure is better shared.</p>
+        <img src="pixelframe-design_26fq9zkc-removebg-preview.png?v=final" 
+             alt="Euro 2026" 
+             class="h-32 w-auto logo-img object-contain transform scale-110 -mb-2">
+        <p class="text-white text-[9px] font-black tracking-[0.2em] uppercase opacity-90 italic">Adventure is better shared.</p>
       </div>
-      <div v-if="loading" class="absolute right-4 top-14"><div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div></div>
+      <div v-if="loading" class="absolute right-4 top-10"><div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div></div>
     </header>
 
     <div class="swiper mySwiper flex-1 w-full pt-2">
@@ -52,22 +61,22 @@
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyYellow">
             <div class="sticky top-0 bg-white z-20 pb-2 flex justify-between items-center mb-3">
-              <h2 class="text-xl font-black text-toyYellow uppercase font-serif">Itinerary</h2>
+              <h2 class="text-xl font-black text-toyYellow uppercase">Itinerary</h2>
               <button @click="toggleEdit('itinerary')"><i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
             <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
               <button v-for="date in availableDates" @click="currentDate = date" :class="currentDate === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">{{ date }}</button>
             </div>
             <div v-if="isEditing.itinerary" class="space-y-3">
-              <div v-for="(item, idx) in travelData.itinerary[currentDate]" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
-                <input v-model="item.time" class="edit-input w-24" placeholder="Time (09:00)">
+              <div v-for="(item, idx) in travelData.itinerary[currentDate]" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
+                <input v-model="item.time" class="edit-input w-24" placeholder="Time (e.g. 09:00)">
                 <input v-model="item.activity" class="edit-input" placeholder="Activity">
                 <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed">✕</button>
               </div>
               <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ ADD PLAN</button>
             </div>
             <div v-else class="space-y-1">
-              <div v-for="item in sortedItinerary" class="flex gap-4 p-4 border-b border-slate-50 items-start">
+              <div v-for="item in sortedItinerary" :key="item.time" class="flex gap-4 p-4 border-b border-slate-50 items-start">
                 <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
                 <p class="font-bold text-sm leading-relaxed text-slate-700">{{item.activity}}</p>
               </div>
@@ -81,18 +90,16 @@
               <h2 class="text-xl font-black text-toyRed uppercase">Tickets</h2>
               <button @click="toggleEdit('tickets')"><i :class="isEditing.tickets ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
-            <div class="grid grid-cols-1 gap-4">
-              <div v-for="(t, idx) in travelData.tickets" class="p-4 bg-red-50 rounded-3xl border border-red-100 text-center">
+            <div class="space-y-4">
+              <div v-for="(t, idx) in travelData.tickets" :key="idx" class="p-4 bg-red-50 rounded-3xl border border-red-100 text-center">
                 <div v-if="isEditing.tickets">
-                  <input v-model="t.name" class="edit-input" placeholder="Ticket Name">
-                  <input v-model="t.url" class="edit-input" placeholder="QR Code Link or Note">
-                  <button @click="travelData.tickets.splice(idx, 1)" class="text-toyRed font-bold text-xs">REMOVE</button>
+                  <input v-model="t.name" class="edit-input" placeholder="Ticket Name (e.g. Anfield Tour)">
+                  <input v-model="t.url" class="edit-input" placeholder="QR Link or Note">
+                  <button @click="travelData.tickets.splice(idx, 1)" class="text-toyRed font-bold text-[10px]">REMOVE</button>
                 </div>
                 <div v-else>
                   <p class="font-black text-toyRed mb-2">{{t.name}}</p>
-                  <div class="bg-white p-2 rounded-xl inline-block shadow-inner">
-                    <i class="fas fa-qrcode text-4xl text-slate-800"></i>
-                  </div>
+                  <div class="bg-white p-4 rounded-2xl inline-block shadow-inner"><i class="fas fa-qrcode text-5xl text-slate-800"></i></div>
                   <p class="text-[10px] mt-2 font-bold text-slate-400">{{t.url}}</p>
                 </div>
               </div>
@@ -104,12 +111,12 @@
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyPurple">
             <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyPurple uppercase">Flight</h2><button @click="toggleEdit('flight')"><i :class="isEditing.flight ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
-            <div v-for="f in sortedFlights" class="mb-3 p-4 bg-purple-50 rounded-3xl text-center border border-purple-100">
+            <div v-for="f in sortedFlights" :key="f.time" class="mb-3 p-4 bg-purple-50 rounded-3xl text-center border border-purple-100">
               <div v-if="isEditing.flight">
-                <input v-model="f.time" class="edit-input" placeholder="Date/Time (e.g. 05/21 14:00)">
-                <input v-model="f.no" class="edit-input" placeholder="Flight No."><input v-model="f.info" class="edit-input" placeholder="Route">
+                <input v-model="f.time" class="edit-input" placeholder="Date (e.g. 05/21)">
+                <input v-model="f.no" class="edit-input" placeholder="Flight No."><input v-model="f.info" class="edit-input" placeholder="Route Info">
               </div>
-              <div v-else><p class="text-2xl font-black text-toyPurple">{{f.no}}</p><p class="text-xs font-bold text-slate-500 uppercase">{{f.time}} - {{f.info}}</p></div>
+              <div v-else><p class="text-2xl font-black text-toyPurple">{{f.no || 'TBC'}}</p><p class="text-xs font-bold text-slate-500 uppercase tracking-widest">{{f.time}} - {{f.info}}</p></div>
             </div>
             <button v-if="isEditing.flight" @click="travelData.flights.push({time:'',no:'',info:''})" class="w-full py-2 border-2 border-dashed border-toyPurple rounded-xl text-toyPurple font-black">+ ADD FLIGHT</button>
           </div>
@@ -118,12 +125,12 @@
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyGreen">
             <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyGreen uppercase">Hotel</h2><button @click="toggleEdit('hotel')"><i :class="isEditing.hotel ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
-            <div v-for="h in sortedHotels" class="mb-3 p-4 bg-green-50 rounded-3xl border border-green-100">
+            <div v-for="h in sortedHotels" :key="h.date" class="mb-3 p-4 bg-green-50 rounded-3xl border border-green-100">
               <div v-if="isEditing.hotel">
                 <input v-model="h.date" class="edit-input" placeholder="Check-in Date (e.g. 05/21)">
-                <input v-model="h.name" class="edit-input" placeholder="Hotel Name"><textarea v-model="h.addr" class="edit-input" placeholder="Details"></textarea>
+                <input v-model="h.name" class="edit-input" placeholder="Hotel Name"><textarea v-model="h.addr" class="edit-input" placeholder="Address/Details"></textarea>
               </div>
-              <div v-else><div class="flex justify-between"><p class="font-black text-toyGreen">{{h.name}}</p><span class="text-[10px] font-black text-toyGreen opacity-50">{{h.date}}</span></div><p class="text-[10px] font-bold mt-2 text-slate-500">{{h.addr}}</p></div>
+              <div v-else><div class="flex justify-between"><p class="font-black text-toyGreen text-lg">{{h.name || 'TBC'}}</p><span class="text-[10px] font-black text-toyGreen opacity-50">{{h.date}}</span></div><p class="text-[10px] font-bold mt-2 text-slate-500 whitespace-pre-line leading-relaxed">{{h.addr}}</p></div>
             </div>
             <button v-if="isEditing.hotel" @click="travelData.hotels.push({date:'',name:'',addr:''})" class="w-full py-2 border-2 border-dashed border-toyGreen rounded-xl text-toyGreen font-black">+ ADD HOTEL</button>
           </div>
@@ -132,7 +139,8 @@
       </div>
     </div>
 
-    <nav class="bg-white flex justify-around items-center border-t shrink-0 z-50 px-2" style="height: calc(85px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
+    <nav class="bg-white flex justify-around items-center border-t shrink-0 z-50 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]" 
+         style="height: calc(85px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
       <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-day text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Plan</span></div>
       <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-ticket-alt text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Tickets</span></div>
       <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-plane text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Flight</span></div>
@@ -142,6 +150,7 @@
 
   <script>
     const { createApp, ref, onMounted, computed } = Vue;
+    // 你的 Firebase 配置保持不變
     const firebaseConfig = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", projectId: "toystorytravel", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
@@ -152,6 +161,7 @@
         const activeIdx = ref(0);
         const loading = ref(true);
         const currentDate = ref('5/21');
+        // 更新日期範圍 5/21 - 6/7
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
         const isEditing = ref({ itinerary:false, flight:false, hotel:false, tickets:false });
 
@@ -159,29 +169,50 @@
           itinerary: {}, flights: [], hotels: [], tickets: []
         });
 
-        // 核心排序邏輯
-        const sortedItinerary = computed(() => (travelData.value.itinerary[currentDate.value] || []).slice().sort((a,b) => a.time.localeCompare(b.time)));
-        const sortedFlights = computed(() => travelData.value.flights.slice().sort((a,b) => a.time.localeCompare(b.time)));
-        const sortedHotels = computed(() => travelData.value.hotels.slice().sort((a,b) => a.date.localeCompare(b.date)));
+        // 所有頁面的自動排序邏輯
+        const sortedItinerary = computed(() => {
+          const list = travelData.value.itinerary[currentDate.value] || [];
+          return [...list].sort((a, b) => a.time.localeCompare(b.time));
+        });
+        const sortedFlights = computed(() => {
+          return [...travelData.value.flights].sort((a, b) => a.time.localeCompare(b.time));
+        });
+        const sortedHotels = computed(() => {
+          return [...travelData.value.hotels].sort((a, b) => a.date.localeCompare(b.date));
+        });
 
         const loadFirebase = () => {
           db.ref('travelData').on('value', (s) => { 
             const data = s.val() || {};
             if (!data.itinerary) data.itinerary = {};
             availableDates.forEach(d => { if(!data.itinerary[d]) data.itinerary[d] = []; });
+            if (!data.tickets) data.tickets = [];
             travelData.value = data; 
             loading.value = false; 
           });
         };
-        const saveToFirebase = () => { loading.value = true; db.ref('travelData').set(travelData.value).then(() => loading.value = false); };
-        const toggleEdit = (part) => { isEditing.value[part] = !isEditing.value[part]; if (!isEditing.value[part]) saveToFirebase(); };
-        const addItem = (type) => { if (type === 'itinerary') travelData.value.itinerary[currentDate.value].push({time:'09:00', activity:''}); };
+        
+        const saveToFirebase = () => {
+          loading.value = true;
+          db.ref('travelData').set(travelData.value).then(() => loading.value = false);
+        };
+
+        const toggleEdit = (part) => {
+          isEditing.value[part] = !isEditing.value[part];
+          if (!isEditing.value[part]) saveToFirebase();
+        };
+
+        const addItem = (type) => {
+          if (type === 'itinerary') travelData.value.itinerary[currentDate.value].push({time:'09:00', activity:''});
+        };
+
         const goTo = (idx) => { swiperRef.value.slideTo(idx); activeIdx.value = idx; };
 
         onMounted(() => {
           loadFirebase();
           swiperRef.value = new Swiper(".mySwiper", { on: { slideChange: function() { activeIdx.value = this.activeIndex; } } });
         });
+
         return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, sortedItinerary, sortedFlights, sortedHotels }
       }
     }).mount('#app')
