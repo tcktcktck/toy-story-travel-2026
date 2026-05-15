@@ -2,8 +2,9 @@
 <html lang="zh-Hant">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Euro 2026 Adventure</title>
+  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -20,7 +21,9 @@
   
   <style type="text/tailwindcss">
     @layer components {
-      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-[8px] border-slate-200 h-[calc(100vh-250px)] overflow-y-auto relative; }
+      /* 使用 svh (Small Viewport Height) 解決 Safari 底部 Bar 遮擋 */
+      .app-container { height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-[8px] border-slate-200 overflow-y-auto relative; height: calc(100svh - 280px); }
       .nav-item { @apply flex flex-col items-center cursor-pointer transition-all duration-300 text-slate-300 flex-1; }
       .nav-item.active { @apply text-toyBlue scale-110; }
       .edit-input { @apply w-full p-2 mb-2 border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm font-bold bg-blue-50/50; }
@@ -28,22 +31,25 @@
       .date-btn-active { @apply bg-toyYellow text-white border-toyYellow shadow-md; }
       .date-btn-inactive { @apply bg-white text-slate-400 border-slate-100; }
     }
-    body { background-color: #E0F2FE; background-image: radial-gradient(#fff 10%, transparent 10%); background-size: 30px 30px; }
+    body { background-color: #E0F2FE; background-image: radial-gradient(#fff 10%, transparent 10%); background-size: 30px 30px; margin: 0; padding: 0; overscroll-behavior: none; }
     [v-cloak] { display: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
+    
+    /* 確保 Logo 即使有微小底色也會融入背景 */
+    .logo-img { mix-blend-mode: multiply; background: transparent !important; }
   </style>
 </head>
-<body class="h-screen overflow-hidden text-slate-700">
+<body class="touch-none">
 
-  <div id="app" class="h-full flex flex-col" v-cloak>
-    <header class="bg-toyBlue pt-6 pb-4 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
+  <div id="app" class="app-container" v-cloak>
+    <header class="bg-toyBlue pt-10 pb-4 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
       <div class="flex flex-col items-center justify-center">
-        <img src="euro2026_logo.png" alt="Euro 2026" class="h-16 drop-shadow-[0_4px_6px_rgba(0,0,0,0.3)] mb-1 object-contain">
+        <img src="euro2026_logo.png?v=2" alt="Euro 2026" class="h-16 logo-img drop-shadow-[0_4px_4px_rgba(0,0,0,0.2)] mb-1 object-contain">
         <p class="text-white text-[10px] font-black tracking-widest uppercase opacity-90 italic">Adventure is better shared.</p>
       </div>
-      <div v-if="loading" class="absolute right-4 top-10 flex items-center gap-1">
+      <div v-if="loading" class="absolute right-4 top-14 flex items-center gap-1">
         <div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div>
-        <span class="text-[8px] text-white font-bold uppercase">Syncing</span>
+        <span class="text-[8px] text-white font-bold uppercase">Sync</span>
       </div>
     </header>
 
@@ -68,7 +74,7 @@
               <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody bg-yellow-50/50">+ ADD PLAN</button>
             </div>
             <div v-else class="space-y-1">
-              <div v-for="item in travelData.itinerary[currentDate]" class="flex gap-4 p-4 border-b border-slate-50 items-start hover:bg-slate-50 rounded-2xl transition-all">
+              <div v-for="item in travelData.itinerary[currentDate]" class="flex gap-4 p-4 border-b border-slate-50 items-start">
                 <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
                 <p class="font-bold text-sm leading-relaxed">{{item.activity}}</p>
               </div>
@@ -116,9 +122,9 @@
           <div class="card-toy border-l-[12px] border-toyWoody">
             <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyWoody uppercase">Packing</h2><button @click="toggleEdit('packing')"><i :class="isEditing.packing ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
             <div v-for="(item, idx) in travelData.packing" class="flex items-center gap-3 p-3 border-b border-slate-50">
-              <i @click="item.done = !item.done; saveToFirebase()" :class="item.done ? 'fas fa-check-circle text-toyGreen shadow-sm' : 'far fa-circle text-slate-200'" class="cursor-pointer"></i>
+              <i @click="item.done = !item.done; saveToFirebase()" :class="item.done ? 'fas fa-check-circle text-toyGreen' : 'far fa-circle text-slate-200'" class="cursor-pointer"></i>
               <input v-if="isEditing.packing" v-model="item.name" class="edit-input !mb-0 flex-1">
-              <span v-else @click="item.done = !item.done; saveToFirebase()" :class="{'line-through text-slate-300': item.done}" class="font-bold text-sm cursor-pointer">{{item.name}}</span>
+              <span v-else @click="item.done = !item.done; saveToFirebase()" :class="{'line-through text-slate-300': item.done}" class="font-bold text-sm cursor-pointer flex-1">{{item.name}}</span>
               <button v-if="isEditing.packing" @click="travelData.packing.splice(idx, 1)" class="text-toyRed px-2">✕</button>
             </div>
             <button v-if="isEditing.packing" @click="travelData.packing.push({name:'',done:false})" class="w-full mt-4 py-2 border-2 border-dashed border-toyWoody rounded-xl text-xs font-black bg-orange-50/30">+ ADD ITEM</button>
@@ -148,7 +154,6 @@
               </div>
             </div>
             <div v-if="!isEditing.expense && travelData.expenses.length > 0" class="mt-6 space-y-2 border-t pt-4">
-              <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Total Summary</p>
               <div v-for="(val, cur) in calculateTotals()" class="p-4 bg-pink-50 rounded-2xl flex justify-between items-baseline border border-pink-100">
                 <span class="text-[10px] font-black text-toyPink opacity-60 uppercase">Total {{cur}}</span>
                 <span class="text-xl font-black text-toyPink">{{cur}}{{val}}</span>
@@ -161,7 +166,7 @@
       </div>
     </div>
 
-    <nav class="bg-white h-20 flex justify-around items-center border-t shrink-0 pb-2 z-50">
+    <nav class="bg-white flex justify-around items-center border-t shrink-0 z-50 px-2 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]" style="height: 100px; padding-bottom: 35px;">
       <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-alt text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Itinerary</span></div>
       <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-plane text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Flight</span></div>
       <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-hotel text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Hotel</span></div>
