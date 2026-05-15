@@ -34,7 +34,10 @@
       .toy-label { @apply text-[10px] font-black uppercase tracking-widest opacity-40 mb-1; }
       .btn-bounce { @apply active:scale-95 transition-transform duration-150; }
       
-      .edit-input { @apply w-full p-3 mb-2 border-2 border-dashed border-slate-200 rounded-2xl outline-none text-sm font-bold bg-blue-50/50 focus:border-toyBlue; }
+      /* Wanderlog Style Inputs */
+      .edit-box { @apply bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 mb-4 relative; }
+      .input-field { @apply w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold mb-2 outline-none focus:border-toyBlue; }
+      .textarea-field { @apply w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-toyBlue; }
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .header-logo { height: 60px; transform: scale(1.4); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
@@ -69,7 +72,7 @@
                 </button>
               </div>
               
-              <div class="flex-1 overflow-y-auto no-scrollbar">
+              <div class="flex-1 overflow-y-auto no-scrollbar px-1">
                 
                 <div v-if="page.label === 'Plan'" class="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-2 swiper-no-swiping shrink-0">
                   <button v-for="date in availableDates" @click="currentDate = date" 
@@ -79,57 +82,33 @@
                   </button>
                 </div>
 
-                <div v-if="isEditing[page.label]" class="space-y-3 pb-20">
-                  <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="p-4 bg-slate-50 rounded-3xl relative border-2 border-dashed border-slate-200">
-                    <input v-model="item.title" class="edit-input" placeholder="Title / Time">
-                    <textarea v-model="item.content" class="edit-input text-xs" rows="3" placeholder="Details..."></textarea>
-                    <button @click="removeItem(page.label, idx)" class="absolute top-4 right-4 text-toyRed p-1 opacity-40">✕</button>
+                <div v-if="isEditing[page.label]" class="space-y-4 pb-20">
+                  <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="edit-box">
+                    <input v-model="item.time" class="input-field" placeholder="🕒 Time (e.g. 09:00)">
+                    <input v-model="item.location" class="input-field" placeholder="📍 Location / Title">
+                    <textarea v-model="item.note" class="textarea-field" rows="2" placeholder="📝 Notes / Booking Ref..."></textarea>
+                    <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-white text-toyRed shadow-md w-8 h-8 rounded-full flex items-center justify-center">✕</button>
                   </div>
                   <button @click="addItem(page.label)" class="w-full py-4 border-2 border-dashed rounded-3xl text-xs font-black" :style="{ color: page.color, borderColor: page.color }">
-                    + ADD NEW ITEM
+                    + ADD EVENT
                   </button>
                 </div>
 
-                <div v-else class="space-y-2 pb-10">
-                  
-                  <template v-if="page.label === 'Plan'">
-                    <div v-for="item in getSortedData('Plan')" class="flex gap-4">
-                      <div class="flex flex-col items-center">
-                        <div class="w-3 h-3 rounded-full bg-toyYellow shadow-sm"></div>
-                        <div class="w-0.5 h-full bg-slate-100"></div>
-                      </div>
-                      <div class="pb-6 flex-1">
-                        <span class="text-toyWoody font-black text-xs block mb-1">{{item.title}}</span>
-                        <p class="font-bold text-slate-700 text-sm leading-relaxed whitespace-pre-line">{{item.content}}</p>
+                <div v-else class="space-y-4 pb-10">
+                  <div v-for="item in getSortedData(page.label)" :key="item.time + item.location" class="flex gap-4">
+                    <div class="flex flex-col items-center shrink-0 w-10">
+                      <div class="text-[10px] font-black text-slate-400 uppercase">{{item.time}}</div>
+                      <div class="w-0.5 h-full bg-slate-100 mt-2"></div>
+                    </div>
+                    <div class="flex-1 bg-white border border-slate-100 rounded-3xl p-4 shadow-sm mb-2">
+                      <h3 class="font-black text-slate-800 text-sm mb-1">{{item.location}}</h3>
+                      <div v-if="item.note" class="bg-slate-50 rounded-xl p-3">
+                        <p class="text-[11px] font-bold text-slate-500 leading-relaxed whitespace-pre-line">{{item.note}}</p>
                       </div>
                     </div>
-                  </template>
-
-                  <template v-else-if="page.label === 'Tickets'">
-                    <div v-for="item in getSortedData('Tickets')" class="bg-toyRed/5 border-2 border-toyRed/20 rounded-3xl p-5 border-dashed relative overflow-hidden mb-4">
-                      <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-inner"></div>
-                      <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-inner"></div>
-                      <div class="flex justify-between items-center mb-2">
-                        <span class="font-black text-toyRed text-sm">{{item.title}}</span>
-                        <i class="fas fa-qrcode text-toyRed/20 text-2xl"></i>
-                      </div>
-                      <p class="text-xs font-bold text-slate-500 whitespace-pre-line">{{item.content}}</p>
-                    </div>
-                  </template>
-
-                  <template v-else>
-                    <div v-for="item in getSortedData(page.label)" class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-b-4 border-slate-200 mb-2">
-                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :style="{backgroundColor: page.color + '20', color: page.color}">
-                        <i :class="page.icon + ' text-sm'"></i>
-                      </div>
-                      <div class="flex-1">
-                        <span class="block font-black text-[10px] uppercase opacity-40">{{item.title || 'INFO'}}</span>
-                        <p class="text-sm font-bold text-slate-700 whitespace-pre-line">{{item.content}}</p>
-                      </div>
-                    </div>
-                  </template>
-
+                  </div>
                 </div>
+
               </div>
             </div>
           </div>
@@ -168,62 +147,22 @@
         const activeIdx = ref(0);
         const loading = ref(true);
         const currentDate = ref('5/21');
-        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4'];
         const isEditing = ref({});
         
-        // 預載入你的完整行程
+        // Wanderlog 格式數據
         const travelData = ref({
           Plan: {
             '5/21': [
-              { title: '00:05', content: '香港 (HKG) 出發 ➔ 經杜拜轉機 (EK381 & EK001)' },
-              { title: '12:25', content: '抵達倫敦希斯路機場 (LHR)' },
-              { title: '14:30', content: '搭 Elizabeth Line 前往 Ilford (車費約 £15.50)' },
-              { title: 'Hotel', content: 'Best Western Greater London Hotel' }
-            ],
-            '5/22': [
-              { title: '13:50', content: '抵達 Wembley Park (需預留 1 小時車程)' },
-              { title: '14:00', content: 'Mundo Pixar Experience (體驗 55min)' }
-            ],
-            '5/23': [
-              { title: '11:07', content: 'London Euston 出發 (Avanti West Coast)' },
-              { title: '13:23', content: '抵達 Liverpool Lime Street' },
-              { title: '20:00', content: '晚餐預約：Belzan' }
+              { time: '12:25', location: 'Heathrow LHR', note: '抵達後搭 Elizabeth Line 前往 Ilford。\n車費 £15.50。' },
+              { time: '15:00', location: 'Best Western Hotel', note: 'Check-in 寄存行李。' }
             ],
             '5/24': [
-              { title: '09:45', content: 'Anfield Stadium Tour (球場導賞)' },
-              { title: '16:00', content: '利物浦 vs 賓福特 (Match Day!)' }
-            ],
-            '5/29': [
-              { title: '14:30', content: '聖家堂 (Sagrada Família) 入場' },
-              { title: '15:15', content: '登塔 (Passion Facade)' }
-            ],
-            '6/4': [
-              { title: '09:30', content: 'Disneyland Paris (全日狂歡)' },
-              { title: '22:40', content: 'Disney Dreams! 煙花匯演' }
+              { time: '09:45', location: 'Anfield Stadium Tour', note: '球場導賞，記得帶相機。' },
+              { time: '16:00', location: 'LFC vs Brentford', note: '英超賽事！門票喺 NFC Wallet。' }
             ]
           },
-          Tickets: [
-            { title: 'LFC vs Brentford', content: '門票已入 NFC Apple Wallet' },
-            { title: 'Mundo Pixar', content: '5/22 14:00 (需提早 10 分鐘到)' },
-            { title: 'Crazy Horse', content: '6/2 22:30 (禁穿運動鞋!)' }
-          ],
-          Flight: [
-            { title: 'HKG-LHR', content: '5/21 00:05 (EK381/EK001)' },
-            { title: 'LGW-BCN', content: '5/28 13:00 (BA8089)' }
-          ],
-          Hotel: [
-            { title: 'London', content: 'Best Western Greater London Hotel' }
-          ],
-          Map: [
-            { title: 'LHR to Ilford', content: 'Elizabeth Line (£15.50)' }
-          ],
-          Pack: [
-            { title: 'Clothing', content: '倫敦 5 月天氣約 10-18°C，帶薄外套' }
-          ],
-          Budget: [
-            { title: 'Elizabeth Line', content: '£15.50' },
-            { title: 'London Bus', content: 'Flat rate £1.75' }
-          ]
+          Tickets: [], Flight: [], Hotel: [], Map: [], Pack: [], Budget: []
         });
 
         const navItems = [
@@ -247,7 +186,7 @@
 
         const getSortedData = (label) => {
           const data = getRawData(label);
-          return [...data].sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, {numeric: true}));
+          return [...data].sort((a, b) => (a.time || "").localeCompare(b.time || "", undefined, {numeric: true}));
         };
 
         const toggleEdit = async (label) => {
@@ -258,8 +197,7 @@
               await db.ref('universalData').set(cleanData);
               isEditing.value[label] = false;
             } catch (err) {
-              console.error("Save Error:", err);
-              alert("儲存失敗，請檢查 Monday Firebase 設定！");
+              alert("Save failed! Please check your settings on Monday.");
             } finally {
               loading.value = false;
             }
@@ -269,7 +207,7 @@
         };
 
         const addItem = (label) => {
-          getRawData(label).push({ title: label === 'Plan' ? '09:00' : '', content: '' });
+          getRawData(label).push({ time: '', location: '', note: '' });
         };
 
         const removeItem = (label, idx) => {
