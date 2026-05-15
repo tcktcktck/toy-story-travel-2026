@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Euro 2026 Adventure</title>
+  <title>Euro 2026 Adventure | Official Planner</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -43,7 +43,6 @@
           
           <div v-for="(page, index) in navItems" :key="index" class="swiper-slide py-4">
             <div class="card-toy" :style="{ borderTop: '10px solid ' + page.color }">
-              
               <div class="flex justify-between items-center mb-4">
                 <h2 class="font-black italic text-2xl uppercase" :style="{ color: page.color }">{{ page.label }}</h2>
                 <button @click="toggleEdit(page.label)" class="bg-slate-50 p-3 rounded-2xl border border-slate-100">
@@ -58,10 +57,6 @@
                     class="px-4 py-2 rounded-xl text-[10px] font-black shrink-0 transition-all">
                     {{date}}
                   </button>
-                </div>
-
-                <div v-if="getRawData(page.label).length === 0" class="text-center py-10 text-slate-300 font-bold italic text-sm">
-                  -- NO ACTIVITIES --
                 </div>
 
                 <div v-if="isEditing[page.label]">
@@ -86,7 +81,6 @@
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </main>
@@ -111,46 +105,64 @@
         const loading = ref(true);
         const currentDate = ref('5/21');
         const isEditing = ref({});
-        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/4','6/6'];
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/4','6/6'];
         
         const travelData = ref({
           Plan: {
             '5/21': [{ time: '12:25', location: 'Heathrow Airport', note: 'Elizabeth Line 前往 Ilford (£15.50)' }],
             '5/22': [
-              { time: '14:00', location: 'Mundo Pixar Experience', note: '票價: £31.50 (HK$342.06)' },
-              { time: '19:30', location: 'Osteria Angelina (London)', note: '預約號: 3UACFL4EMUDE' }
+              { time: '11:00', location: 'Bread Ahead Bakery', note: 'Wembley Brunch' },
+              { time: '14:00', location: 'Mundo Pixar Experience', note: 'Wembley Park' },
+              { time: '19:30', location: 'Osteria Angelina', note: 'Chef\'s Counter | 預約: #3UACFL4EMUDE' }
+            ],
+            '5/23': [
+              { time: '11:07', location: 'Avanti West Coast', note: 'London Euston ➔ Liverpool\n座位: Coach D, Seat 37, 38' },
+              { time: '20:00', location: 'Belzan (Dinner)', note: '訂位代號: Ref BQ9QLVH6' }
             ],
             '5/24': [
-              { time: '09:45', location: 'Anfield Stadium Tour', note: '票價: £27.00 (HK$288.70)' },
-              { time: '16:00', location: 'LFC vs Brentford', note: 'Block L15 (Beat Lounge) | £778.00 (HK$8,231.72)' }
+              { time: '09:45', location: 'Anfield Stadium Tour', note: '訂單: 20448981' },
+              { time: '16:00', location: 'Liverpool vs Brentford', note: 'Beat Lounge | Block L15\n£778.00 (HK$8,231.72)' }
             ],
-            '5/28': [{ time: '13:00', location: '飛往巴塞隆拿 (BA8089)', note: '入住 Gracia Jardinets Airbnb' }],
+            '5/25': [
+              { time: '18:08', location: 'Avanti West Coast', note: 'Liverpool ➔ London Euston\n座位: Coach D, Seat 39, 40' },
+              { time: '20:30', location: 'Dishoom King\'s Cross', note: '晚餐 (Walk-in)' }
+            ],
+            '5/26': [
+              { time: '13:30', location: 'Wes Anderson Exhibition', note: 'Design Museum | 訂單: DMOJ21KHJZSP5' },
+              { time: '20:00', location: 'OMA (Dinner)', note: 'Borough Market 2F | 代號: Ref 4DPE6B3M7653' }
+            ],
+            '5/27': [
+              { time: '12:45', location: 'Inside Aardman (Young V&A)', note: '笑笑羊展覽 | 訂單: 3741138' },
+              { time: '20:00', location: 'The Wolseley City', note: 'Monument | 代號: Ref CVBBM23B8VVU' }
+            ],
+            '5/28': [{ time: '13:00', location: '航班 BA8089 (LGW-BCN)', note: '抵達 BCN T1 (16:15)' }],
             '5/29': [
-              { time: '10:00', location: '奎爾公園 (Park Güell)', note: '入場預約 (3位成人)' },
-              { time: '14:30', location: '聖家堂 (含登塔)', note: '包含語音導覽 (3位成人)' },
-              { time: '20:00', location: '巴特略之家 (Magic Nights)', note: '參觀 + 屋頂音樂會 + 飲品' }
+              { time: '10:00', location: 'Park Güell 入場', note: '9:30 步行上山' },
+              { time: '14:30', location: '聖家堂 Sagrada Família', note: '含登塔 ＋ 語音導覽' },
+              { time: '20:00', location: 'Casa Batlló Magic Nights', note: '屋頂音樂會 ＋ 飲品' }
             ],
-            '5/30': [{ time: '10:15', location: '蒙特塞拉特山經典之旅', note: '齒軌火車 + 黑聖母導覽 (3位成人)' }],
-            '5/31': [], // 確定放空休息
+            '5/30': [
+              { time: '10:15', location: 'Montserrat Tour 出發', note: '19號月台集合 | 13:00 唱詩班' }
+            ],
+            '5/31': [
+              { time: '16:30', location: 'Montjuïc 城堡', note: '週日免費 | 21:18 日落' }
+            ],
             '6/1': [
-              { time: '10:30', location: '米拉之家 (Casa Milà)', note: '語音導覽門票 (3位成人)' },
-              { time: '18:25', location: '前往巴黎 (TO4757)', note: '20:25 抵達 ORY 機場' }
-            ],
-            '6/4': [{ time: '09:30', location: '巴黎迪士尼樂園', note: '全日行程 | 票價: HK$661.70' }],
-            '6/6': [{ time: '21:55', location: '巴黎返港 (EK076)', note: '經杜拜轉機 ➔ 6/7 22:05 抵港' }]
+              { time: '10:30', location: 'Casa Milà (La Pedrera)', note: '米拉之家入場' },
+              { time: '15:05', location: 'Aerobús 前往機場 T2', note: '⚠️ 係 T2 離境！' },
+              { time: '18:25', location: '航班 TO4757 (BCN-ORY)', note: '前往巴黎' }
+            ]
           },
           Tickets: [
             { time: '5/24', location: 'LFC Match Ticket', note: 'HK$8,231.72' },
-            { time: '5/29', location: 'Casa Batlló Music Night', note: 'HK$599.00' },
-            { time: '6/2', location: 'Crazy Horse Paris', note: 'HK$1,279.00' }
+            { time: '5/29', location: 'Casa Batlló Music Night', note: 'HK$599.00' }
           ],
           Hotel: [
-            { time: '5/21', location: 'Best Western London', note: 'HK$600.15' },
-            { time: '5/25', location: 'Finsbury Rose', note: 'HK$1,555.60' },
-            { time: '5/28', location: 'Gracia Jardinets Airbnb', note: 'HK$2,673.59' }
+            { time: '5/25', location: 'Finsbury Rose', note: 'London Accommodation' },
+            { time: '5/28', location: 'Gracia Apartment', note: 'Barcelona' }
           ],
           Budget: [
-            { time: 'Total', location: '巴塞地標總額', note: 'Sagrada + Park Guell + Montserrat' }
+            { time: 'Total', location: '歐遊預算', note: 'Confirmed Version' }
           ]
         });
 
