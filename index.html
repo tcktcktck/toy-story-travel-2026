@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Euro 2026 Wanderlog</title>
+  <title>Euro 2026 Adventure</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -19,24 +19,22 @@
   </script>
   <style type="text/tailwindcss">
     @layer components {
-      .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #F8FAFC; }
+      .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #E0F2FE; }
       .nav-item { @apply flex flex-col items-center justify-center cursor-pointer flex-1 transition-all duration-300; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
-      
       .card-toy { 
-        @apply bg-white rounded-[2.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.08)] 
-               flex flex-col h-[calc(100%-35px)] mx-4 mt-2 transition-all duration-300 relative overflow-hidden border border-slate-100;
+        @apply bg-white rounded-[2.5rem] p-6 shadow-[0_20px_50px_rgba(0,0,0,0.1)] 
+               flex flex-col h-[calc(100%-35px)] mx-4 mt-2 transition-all duration-300 relative overflow-hidden;
       }
-      
       .toy-title { @apply font-black italic tracking-tight uppercase text-2xl; }
       .btn-bounce { @apply active:scale-95 transition-transform duration-150; }
       
-      /* Wanderlog Style Layout */
-      .event-card { @apply bg-white border border-slate-100 rounded-3xl p-4 shadow-sm mb-3 flex gap-4 items-start; }
-      .time-tag { @apply w-12 shrink-0 text-[10px] font-black text-slate-400 uppercase mt-1; }
-      .content-area { @apply flex-1 min-w-0; }
-      .loc-title { @apply font-black text-slate-800 text-sm mb-1 leading-tight; }
-      .note-box { @apply bg-slate-50 rounded-xl p-3 text-[11px] font-bold text-slate-500 leading-relaxed whitespace-pre-line; }
+      /* Wanderlog Style Cards */
+      .event-card { @apply bg-white border border-slate-100 rounded-3xl p-4 shadow-sm mb-3 flex gap-3 items-start transition-all active:bg-slate-50; }
+      .time-col { @apply w-12 shrink-0 text-[10px] font-black text-slate-400 uppercase pt-1; }
+      .info-col { @apply flex-1 min-w-0; }
+      .location-name { @apply font-black text-slate-800 text-sm mb-1 leading-tight; }
+      .note-content { @apply bg-slate-50 rounded-xl p-3 text-[10.5px] font-bold text-slate-500 leading-relaxed whitespace-pre-line; }
       
       .edit-box { @apply bg-slate-50 p-4 rounded-3xl border-2 border-dashed border-slate-200 mb-4 relative; }
       .input-field { @apply w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-sm font-bold mb-2 outline-none focus:border-toyBlue; }
@@ -50,7 +48,7 @@
   <div id="app" class="app-container" v-cloak>
     
     <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-[110]" style="height: 75px;">
-      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026" class="h-12 object-contain filter drop-shadow-md">
+      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026" class="h-10 object-contain">
       <div v-if="loading" class="absolute right-6 top-1/2 -translate-y-1/2">
         <div class="w-3 h-3 bg-toyGreen rounded-full animate-ping"></div>
       </div>
@@ -65,7 +63,7 @@
               
               <div class="flex justify-between items-start mb-5 shrink-0">
                 <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest opacity-30" :style="{ color: page.color }">Adventure Path</p>
+                  <p class="text-[10px] font-black uppercase tracking-widest opacity-30" :style="{ color: page.color }">Day {{index + 1}}</p>
                   <h2 class="toy-title" :style="{ color: page.color }">{{ page.label }}</h2>
                 </div>
                 <button @click.stop="toggleEdit(page.label)" class="btn-bounce bg-slate-50 p-3 rounded-2xl shadow-sm border border-slate-100">
@@ -85,22 +83,22 @@
 
                 <div v-if="isEditing[page.label]" class="space-y-4 pb-20">
                   <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="edit-box">
-                    <input v-model="item.time" class="input-field" placeholder="🕒 Time / Date">
+                    <input v-model="item.time" class="input-field" placeholder="🕒 Time (e.g. 14:00)">
                     <input v-model="item.location" class="input-field" placeholder="📍 Location / Title">
-                    <textarea v-model="item.note" class="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-toyBlue" rows="2" placeholder="📝 Details / Booking Info..."></textarea>
+                    <textarea v-model="item.note" class="w-full bg-white border border-slate-100 rounded-xl px-3 py-2 text-xs font-medium outline-none focus:border-toyBlue" rows="3" placeholder="📝 Details..."></textarea>
                     <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-white text-toyRed shadow-md w-8 h-8 rounded-full flex items-center justify-center border border-slate-100">✕</button>
                   </div>
                   <button @click="addItem(page.label)" class="w-full py-4 border-2 border-dashed rounded-3xl text-xs font-black" :style="{ color: page.color, borderColor: page.color }">
-                    + ADD NEW ENTRY
+                    + ADD ITEM
                   </button>
                 </div>
 
                 <div v-else class="pb-10">
                   <div v-for="item in getSortedData(page.label)" :key="item.location + item.time" class="event-card">
-                    <div class="time-tag">{{item.time}}</div>
-                    <div class="content-area">
-                      <h3 class="loc-title">{{item.location}}</h3>
-                      <div v-if="item.note" class="note-box">{{item.note}}</div>
+                    <div class="time-col">{{item.time}}</div>
+                    <div class="info-col">
+                      <h3 class="location-name">{{item.location}}</h3>
+                      <div v-if="item.note" class="note-content">{{item.note}}</div>
                     </div>
                   </div>
                 </div>
@@ -146,69 +144,76 @@
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
         const isEditing = ref({});
         
+        // 匯入所有圖片與郵件細節
         const travelData = ref({
           Plan: {
             '5/21': [
-              { time: '00:05', location: 'HKG 出發 (EK381)', note: '杜拜轉機 ➔ 12:25 抵達倫敦 LHR' },
-              { time: '14:30', location: 'Best Western Hotel', note: 'Ilford 酒店 Check-in (約 £110.22)' }
+              { time: '00:05', location: 'HKG ➔ DXB (EK381)', note: '機位已確認' },
+              { time: '12:25', location: 'LHR Airport 抵達', note: '轉搭 Elizabeth Line 前往 Ilford' },
+              { time: 'Check-in', location: 'Best Western London', note: 'Ilford, London (2晚)\n房價: £110.22 (約 HK$600)' }
             ],
             '5/22': [
-              { time: '14:00', location: 'Mundo Pixar', note: 'Wembley Park。票價 £31.50。\n需提早 10 分鐘抵達。' },
-              { time: '19:30', location: 'Osteria Angelina (London)', note: '預約編號: 3UACFL4EMUDE' }
+              { time: '13:50', location: 'Mundo Pixar 報到', note: 'Wembley Park (需提早10分鐘)' },
+              { time: '14:00', location: 'Mundo Pixar Experience', note: '票價: £31.50 (HK$342)' },
+              { time: '19:30', location: 'Osteria Angelina (London)', note: '預約號: 3UACFL4EMUDE' }
             ],
             '5/23': [
-              { time: '11:07', location: '前往利物浦 (Euston)', note: '13:23 抵達 Liverpool Lime St' },
-              { time: '20:00', location: 'Belzan 晚餐', note: 'Novotel Paddington Village 入住' }
+              { time: '11:07', location: 'London Euston 出發', note: 'Avanti West Coast 往利物浦' },
+              { time: '13:23', location: '抵達 Liverpool Lime St', note: '入住 Novotel Paddington Village' },
+              { time: '20:00', location: 'Belzan 晚餐', note: '利物浦人氣餐廳' }
             ],
             '5/24': [
-              { time: '09:45', location: 'Anfield Stadium Tour', note: '票價 £27.00。提早 15 分鐘報到。' },
-              { time: '16:00', location: 'LFC vs Brentford', note: 'Beat Lounge Main Stand (Block L15)\n門票：£778.00' }
+              { time: '09:45', location: 'Anfield Stadium Tour', note: '票價: £27.00\n(提早15分鐘報到)' },
+              { time: '16:00', location: 'LFC vs Brentford', note: 'Block L15 (Beat Lounge)\n門票費: £778 (HK$8,231)' }
             ],
             '5/25': [
-              { time: '18:08', location: '返回倫敦 (Lime St)', note: '20:30 抵達 London Euston' },
-              { time: 'Check-in', location: 'Finsbury Rose 酒店', note: '倫敦第二段住宿 (約 £285.69)' }
+              { time: '18:08', location: 'Liverpool ➔ London', note: '20:30 到達 Euston' },
+              { time: 'Check-in', location: 'Finsbury Rose', note: 'London (3晚)\n房價: £285.69 (HK$1,555)' }
             ],
             '5/26': [
-              { time: '13:30', location: 'Wes Anderson: The Archives', note: 'Design Museum。票價 £23.03。' },
-              { time: '20:00', location: 'OMA 晚餐', note: '預約編號: 4DPE6B3M7653' }
+              { time: '13:30', location: 'Wes Anderson 展覽', note: 'Design Museum\n票價: £23.03 (HK$250)' },
+              { time: '20:00', location: 'OMA 晚餐', note: '預約號: 4DPE6B3M7653' }
             ],
             '5/27': [
-              { time: '12:45', location: 'Inside Aardman', note: 'Young V&A。票價 £11.00。' },
-              { time: '20:00', location: 'The Wolseley 晚餐', note: '預約編號: CVBBM23B8VVU' }
+              { time: '12:45', location: 'Inside Aardman 展覽', note: 'Young V&A\n票價: £11.00 (HK$119)' },
+              { time: '20:00', location: 'The Wolseley 晚餐', note: '預約號: CVBBM23B8VVU' }
             ],
             '5/28': [
-              { time: '13:00', location: '飛往巴塞隆拿 (LGW)', note: '機號 BA8089 ➔ 16:15 抵達 BCN' }
+              { time: '13:00', location: 'LGW ➔ BCN (BA8089)', note: '機位已確認' },
+              { time: '16:15', location: '抵達巴塞隆拿', note: '入住 Airbnb Gracia Jardinets\n房價: HK$2,673' }
             ],
             '5/31': [
-              { time: 'Daytime', location: 'Casa Milà (米拉之家)', note: '參觀巴塞隆拿高第建築作品' }
+              { time: 'Daytime', location: 'Casa Milà (米拉之家)', note: '巴塞隆拿經典地標' }
             ],
             '6/2': [
-              { time: '22:30', location: 'Crazy Horse Paris', note: '22:20 前抵達。禁穿運動鞋。' }
+              { time: '22:30', location: 'Crazy Horse Paris', note: '22:20 到達。禁穿波鞋。' }
             ],
             '6/4': [
-              { time: '09:30', location: 'Disneyland Paris', note: '巴黎迪士尼全日狂歡' }
+              { time: '09:30', location: '巴黎迪士尼', note: '全日玩樂' }
+            ],
+            '6/6': [
+              { time: '21:55', location: 'Paris ➔ HKG (EK076)', note: '杜拜轉機 ➔ 6/7 22:05 抵港' }
             ]
           },
           Tickets: [
-            { time: '5/24', location: 'LFC Match (Anfield)', note: 'Block L15 (Beat Lounge) - £778' },
-            { time: '5/22', location: 'Mundo Pixar', note: 'Wembley Park - £31.50' },
-            { time: '5/26', location: 'Wes Anderson', note: 'Design Museum - £23.03' }
+            { time: 'Match', location: 'LFC vs Brentford', note: 'Block L15 Main Stand | £778' },
+            { time: 'Pixar', location: 'Mundo Pixar', note: 'Wembley | £31.50' },
+            { time: 'Exhibition', location: 'Wes Anderson', note: 'Design Museum | £23.03' }
           ],
           Flight: [
-            { time: '5/21', location: 'EK381/EK001', note: 'HKG ➔ DXB ➔ LHR' },
-            { time: '5/28', location: 'BA8089', note: 'LGW ➔ BCN' },
-            { time: '6/1', location: 'TO4757', note: 'BCN ➔ ORY' }
+            { time: '5/21', location: 'EK381 (HKG-LHR)', note: 'Emirates' },
+            { time: '5/28', location: 'BA8089 (LGW-BCN)', note: 'British Airways' },
+            { time: '6/1', location: 'TO4757 (BCN-ORY)', note: 'Transavia' }
           ],
           Hotel: [
-            { time: '5/21-23', location: 'Best Western Greater London', note: 'Ilford, London' },
-            { time: '5/23-25', location: 'Novotel Paddington Village', note: 'Liverpool' },
-            { time: '5/25-28', location: 'Finsbury Rose', note: 'London' },
-            { time: '5/28-6/1', location: 'Airbnb Gracia Jardinets', note: 'Barcelona' }
+            { time: 'LHR', location: 'Best Western', note: '£110.22' },
+            { time: 'LPL', location: 'Novotel Paddington', note: 'Confirmed' },
+            { time: 'LDN', location: 'Finsbury Rose', note: £'285.69' },
+            { time: 'BCN', location: 'Airbnb Gracia', note: 'HK$2,673' }
           ],
           Budget: [
-            { time: 'Match', location: '利物浦門票', note: 'HK$8,231.72' },
-            { time: 'Hotel', location: '倫敦首段 (Best Western)', note: 'HK$600.15' },
-            { time: 'Hotel', location: '倫敦尾段 (Finsbury)', note: 'HK$1,555.60' }
+            { time: 'Tickets', location: '球賽門票', note: 'HK$8,231.72' },
+            { time: 'Hotels', location: '倫敦總計', note: '約 HK$2,155' }
           ],
           Map: [], Pack: []
         });
@@ -245,7 +250,7 @@
               await db.ref('universalData').set(cleanData);
               isEditing.value[label] = false;
             } catch (err) {
-              alert("儲存失敗：需檢查 Firebase 或稍後再試！");
+              alert("Save failed. Try again Monday!");
             } finally {
               loading.value = false;
             }
