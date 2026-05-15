@@ -38,9 +38,9 @@
 <body class="h-screen overflow-hidden">
 
   <div id="app" class="h-full flex flex-col" v-cloak>
-    <header class="bg-toyBlue p-4 text-white text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative">
+    <header class="bg-toyBlue p-4 text-white text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
       <h1 class="text-xl font-black italic tracking-tighter uppercase">Toy Story Travel</h1>
-      <div v-if="loading" class="absolute right-4 top-5 text-[9px] animate-pulse">📡 同步中...</div>
+      <div v-if="loading" class="absolute right-4 top-5 text-[9px] animate-pulse">📡 SYNCING...</div>
     </header>
 
     <div class="swiper mySwiper flex-1 w-full pt-2">
@@ -50,7 +50,7 @@
           <div class="card-toy border-l-[12px] border-toyYellow">
             <div class="flex justify-between items-start sticky top-0 bg-white z-20 pb-2">
               <div class="flex-1 overflow-hidden">
-                <h2 class="text-xl font-black mb-2 flex items-center gap-2"><i class="fas fa-calendar-day text-toyYellow"></i> 行程</h2>
+                <h2 class="text-xl font-black mb-2 flex items-center gap-2 text-toyYellow"><i class="fas fa-calendar-day"></i> 行程</h2>
                 <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
                   <button v-for="(acts, date) in travelData.itinerary" @click="currentDay = date" 
                           :class="currentDay === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">
@@ -65,17 +65,17 @@
             
             <div class="space-y-4 pt-4">
               <div v-if="isEditing.itinerary" class="space-y-4">
-                <div v-for="(item, idx) in travelData.itinerary[currentDay]" class="p-3 bg-slate-50 rounded-2xl relative border border-slate-100 shadow-inner">
+                <div v-for="(item, idx) in travelData.itinerary[currentDay]" class="p-3 bg-slate-50 rounded-2xl relative border border-slate-100">
                   <input v-model="item.time" class="edit-input w-24" placeholder="00:00">
-                  <input v-model="item.activity" class="edit-input" placeholder="去邊玩?">
+                  <input v-model="item.activity" class="edit-input" placeholder="項目">
                   <input v-model="item.loc" class="edit-input mb-0" placeholder="地點">
-                  <button @click="travelData.itinerary[currentDay].splice(idx, 1)" class="absolute -top-2 -right-2 bg-toyRed text-white w-6 h-6 rounded-full text-xs shadow-md">✕</button>
+                  <button @click="travelData.itinerary[currentDay].splice(idx, 1)" class="absolute -top-2 -right-2 bg-toyRed text-white w-6 h-6 rounded-full text-xs">✕</button>
                 </div>
-                <button @click="travelData.itinerary[currentDay].push({time:'12:00',activity:'',loc:''})" class="w-full py-3 border-2 border-dashed border-toyYellow text-toyWoody rounded-2xl font-black text-xs">+ 新增行程項目</button>
+                <button @click="travelData.itinerary[currentDay].push({time:'12:00',activity:'',loc:''})" class="w-full py-3 border-2 border-dashed border-toyYellow text-toyWoody rounded-2xl font-black text-xs">+ 新增行程</button>
               </div>
-              <div v-else v-for="item in travelData.itinerary[currentDay]" class="flex gap-4 p-4 rounded-3xl bg-amber-50 border border-amber-100 shadow-sm animate-in fade-in slide-in-from-bottom-2">
+              <div v-else v-for="item in travelData.itinerary[currentDay]" class="flex gap-4 p-4 rounded-3xl bg-amber-50 border border-amber-100">
                 <span class="bg-toyWoody text-white font-black px-3 py-1 rounded-full text-[10px] h-fit">{{item.time}}</span>
-                <div><p class="font-bold text-sm text-slate-700">{{item.activity}}</p><p class="text-[10px] text-slate-400 font-bold mt-1"><i class="fas fa-location-dot text-toyRed mr-1"></i>{{item.loc}}</p></div>
+                <div><p class="font-bold text-sm">{{item.activity}}</p><p class="text-[10px] text-slate-400 font-bold mt-1">{{item.loc}}</p></div>
               </div>
             </div>
           </div>
@@ -83,10 +83,10 @@
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyBlue">
-            <h2 class="text-xl font-black mb-4"><i class="fas fa-map-location-dot text-toyBlue"></i> 玩具地圖</h2>
+            <h2 class="text-xl font-black mb-4 text-toyBlue"><i class="fas fa-map-location-dot"></i> 地圖</h2>
             <div class="bg-blue-50/50 rounded-[2rem] h-full flex flex-col items-center justify-center text-toyBlue border-4 border-dashed border-toyBlue/20">
-               <i class="fas fa-compass text-6xl mb-4 animate-spin-slow"></i>
-               <p class="font-black">安仔正定位中...</p>
+               <i class="fas fa-compass text-6xl mb-4 animate-bounce"></i>
+               <p class="font-black">定位中...</p>
             </div>
           </div>
         </div>
@@ -97,15 +97,13 @@
               <h2 class="text-xl font-black text-toyPurple"><i class="fas fa-rocket"></i> 航班</h2>
               <button @click="toggleEdit('flight')"><i :class="isEditing.flight ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
-            <div v-if="isEditing.flight" class="space-y-2">
+            <div v-if="isEditing.flight">
               <input v-model="travelData.flight.no" class="edit-input" placeholder="航班號">
-              <input v-model="travelData.flight.from" class="edit-input" placeholder="由">
+              <input v-model="travelData.flight.from" class="edit-input" placeholder="出發">
               <input v-model="travelData.flight.to" class="edit-input" placeholder="目的地">
             </div>
-            <div v-else class="text-center bg-purple-50 p-10 rounded-[2rem] border border-purple-100 shadow-inner">
-              <p class="text-4xl font-black flex justify-around items-center uppercase">
-                {{travelData.flight.from}} <i class="fas fa-plane text-toyPurple text-2xl mx-4 rotate-45"></i> {{travelData.flight.to}}
-              </p>
+            <div v-else class="text-center bg-purple-50 p-10 rounded-[2rem]">
+              <p class="text-4xl font-black uppercase">{{travelData.flight.from}} <i class="fas fa-plane mx-4"></i> {{travelData.flight.to}}</p>
               <p class="mt-6 font-black text-toyPurple italic tracking-widest">{{travelData.flight.no}}</p>
             </div>
           </div>
@@ -118,22 +116,22 @@
               <button @click="toggleEdit('hotel')"><i :class="isEditing.hotel ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
             <div v-if="isEditing.hotel">
-              <input v-model="travelData.hotel.name" class="edit-input" placeholder="酒店名">
+              <input v-model="travelData.hotel.name" class="edit-input" placeholder="酒店名稱">
               <textarea v-model="travelData.hotel.address" class="edit-input h-24" placeholder="地址"></textarea>
             </div>
-            <div v-else class="bg-green-50 p-8 rounded-[2rem] border border-green-100">
-              <p class="text-xl font-black text-slate-800">{{travelData.hotel.name}}</p>
-              <p class="text-xs text-slate-500 mt-6 font-bold leading-relaxed"><i class="fas fa-map-pin text-toyRed mr-2"></i>{{travelData.hotel.address}}</p>
+            <div v-else class="bg-green-50 p-8 rounded-[2rem]">
+              <p class="text-xl font-black">{{travelData.hotel.name}}</p>
+              <p class="text-xs text-slate-500 mt-6 font-bold leading-relaxed">{{travelData.hotel.address}}</p>
             </div>
           </div>
         </div>
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyWoody">
-            <h2 class="text-xl font-black mb-4"><i class="fas fa-suitcase text-toyWoody"></i> 行李清單</h2>
-            <div class="space-y-2 pb-10">
+            <h2 class="text-xl font-black mb-4 text-toyWoody"><i class="fas fa-suitcase"></i> 行李</h2>
+            <div class="space-y-2">
               <div v-for="(item, idx) in travelData.packing" @click="item.done = !item.done; saveToFirebase()" 
-                   class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer active:scale-95 transition-transform">
+                   class="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl cursor-pointer">
                 <i :class="item.done ? 'fas fa-check-circle text-toyGreen' : 'far fa-circle text-slate-300'" class="text-xl"></i>
                 <span :class="{ 'line-through text-slate-300': item.done }" class="font-bold text-sm">{{item.name}}</span>
               </div>
@@ -143,10 +141,10 @@
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyPink">
-            <h2 class="text-xl font-black text-pink-500 mb-4"><i class="fas fa-piggy-bank"></i> 火腿記帳</h2>
+            <h2 class="text-xl font-black text-pink-500 mb-4"><i class="fas fa-piggy-bank"></i> 記帳</h2>
             <div class="space-y-2">
-               <div v-for="exp in travelData.expenses" class="flex justify-between p-4 bg-pink-50 rounded-2xl shadow-sm">
-                 <span class="font-bold text-xs text-slate-600">{{exp.item}}</span>
+               <div v-for="exp in travelData.expenses" class="flex justify-between p-4 bg-pink-50 rounded-2xl">
+                 <span class="font-bold text-xs">{{exp.item}}</span>
                  <span class="font-black text-pink-500">${{exp.amount}}</span>
                </div>
                <div class="mt-6 p-4 bg-white border-2 border-pink-100 rounded-2xl flex justify-between">
@@ -161,15 +159,11 @@
       <div class="swiper-pagination !bottom-2"></div>
     </div>
 
-    <nav class="bg-white/95 backdrop-blur-md h-20 flex justify-around items-center px-4 border-t border-slate-100 shrink-0 pb-2 z-50">
+    <nav class="bg-white h-20 flex justify-around items-center px-4 border-t shrink-0 pb-2 z-50">
       <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-alt text-xl"></i><span class="text-[9px] font-black mt-1">行程</span></div>
       <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-map-location-dot text-xl"></i><span class="text-[9px] font-black mt-1">地圖</span></div>
       <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-plane text-xl"></i><span class="text-[9px] font-black mt-1">航班</span></div>
-      
-      <div class="w-12 h-12 bg-toyRed rounded-full -mt-8 border-4 border-white shadow-lg flex items-center justify-center text-white cursor-pointer active:scale-110 transition-transform">
-        <i class="fas fa-star text-sm"></i>
-      </div>
-
+      <div class="w-12 h-12 bg-toyRed rounded-full -mt-8 border-4 border-white shadow-lg flex items-center justify-center text-white"><i class="fas fa-star text-sm"></i></div>
       <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-hotel text-xl"></i><span class="text-[9px] font-black mt-1">酒店</span></div>
       <div @click="goTo(4)" :class="{active: activeIdx === 4}" class="nav-item"><i class="fas fa-suitcase text-xl"></i><span class="text-[9px] font-black mt-1">行李</span></div>
       <div @click="goTo(5)" :class="{active: activeIdx === 5}" class="nav-item"><i class="fas fa-piggy-bank text-xl"></i><span class="text-[9px] font-black mt-1">記帳</span></div>
@@ -179,7 +173,7 @@
   <script>
     const { createApp, ref, onMounted } = Vue
 
-    // --- 你的 Firebase Config ---
+    // Firebase 配置 (根據你提供的資料整合)
     const firebaseConfig = {
       apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA",
       authDomain: "toystorytravel.firebaseapp.com",
@@ -201,19 +195,16 @@
         const currentDay = ref('5/21');
         const isEditing = ref({ itinerary: false, flight: false, hotel: false });
 
-        // 核心數據結構 (預設資料)
+        // 預設資料結構
         const travelData = ref({
-          itinerary: { 
-            '5/21': [{time:'10:00', activity:'機場集合', loc:'HKG'}],
-            '5/22': [{time:'09:45', activity:'球場賞團', loc:'Anfield'}]
-          },
+          itinerary: { '5/21': [{time:'10:00', activity:'機場集合', loc:'HKG'}] },
           flight: { no: 'BA8089', from: 'HKG', to: 'LPL' },
-          hotel: { name: '抱抱龍主題酒店', address: '95 Buzz Avenue, Liverpool' },
-          packing: [{ name: '護照', done: true }, { name: '相機', done: false }],
+          hotel: { name: '抱抱龍酒店', address: 'Liverpool' },
+          packing: [{ name: '護照', done: true }],
           expenses: [{ item: '機票', amount: 8000 }]
         });
 
-        // 讀取 Firebase
+        // 讀取 Firebase 資料
         const loadFirebase = () => {
           db.ref('travelData').on('value', (snapshot) => {
             const data = snapshot.val();
@@ -225,7 +216,7 @@
           });
         };
 
-        // 儲存 Firebase
+        // 儲存至 Firebase
         const saveToFirebase = () => {
           loading.value = true;
           db.ref('travelData').set(travelData.value).then(() => loading.value = false);
