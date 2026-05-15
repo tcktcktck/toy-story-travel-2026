@@ -23,7 +23,6 @@
       .nav-item { @apply flex flex-col items-center justify-center cursor-pointer flex-1 transition-all duration-300; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
       
-      /* 卡片設計：立體感 + 網格紙底紋 */
       .card-toy { 
         @apply bg-white rounded-[2.5rem] p-6 shadow-[0_15px_40px_rgba(0,0,0,0.12)] 
                flex flex-col h-[calc(100%-35px)] mx-4 mt-2 transition-all duration-300 relative overflow-hidden;
@@ -33,7 +32,7 @@
       
       .toy-title { @apply font-black italic tracking-tight uppercase text-2xl; }
       .toy-label { @apply text-[10px] font-black uppercase tracking-widest opacity-40 mb-1; }
-      .btn-bounce { @apply active:scale-90 transition-transform duration-150; }
+      .btn-bounce { @apply active:scale-95 transition-transform duration-150; }
       
       .edit-input { @apply w-full p-3 mb-2 border-2 border-dashed border-slate-200 rounded-2xl outline-none text-sm font-bold bg-blue-50/50 focus:border-toyBlue; }
     }
@@ -82,11 +81,11 @@
 
                 <div v-if="isEditing[page.label]" class="space-y-3 pb-20">
                   <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="p-4 bg-slate-50 rounded-3xl relative border-2 border-dashed border-slate-200">
-                    <input v-model="item.title" class="edit-input" :placeholder="page.label === 'Plan' ? 'Time (e.g. 09:00)' : 'Title / Flight No.'">
-                    <textarea v-model="item.content" class="edit-input text-xs" :placeholder="'Add ' + page.label + ' details...'"></textarea>
+                    <input v-model="item.title" class="edit-input" placeholder="Title / Time">
+                    <textarea v-model="item.content" class="edit-input text-xs" rows="3" placeholder="Details..."></textarea>
                     <button @click="removeItem(page.label, idx)" class="absolute top-4 right-4 text-toyRed p-1 opacity-40">✕</button>
                   </div>
-                  <button @click="addItem(page.label)" class="w-full py-4 border-2 border-dashed rounded-3xl text-xs font-black transition-colors" :style="{ color: page.color, borderColor: page.color, backgroundColor: page.color + '05' }">
+                  <button @click="addItem(page.label)" class="w-full py-4 border-2 border-dashed rounded-3xl text-xs font-black" :style="{ color: page.color, borderColor: page.color }">
                     + ADD NEW ITEM
                   </button>
                 </div>
@@ -96,42 +95,41 @@
                   <template v-if="page.label === 'Plan'">
                     <div v-for="item in getSortedData('Plan')" class="flex gap-4">
                       <div class="flex flex-col items-center">
-                        <div class="w-3 h-3 rounded-full bg-toyYellow"></div>
+                        <div class="w-3 h-3 rounded-full bg-toyYellow shadow-sm"></div>
                         <div class="w-0.5 h-full bg-slate-100"></div>
                       </div>
-                      <div class="pb-6">
+                      <div class="pb-6 flex-1">
                         <span class="text-toyWoody font-black text-xs block mb-1">{{item.title}}</span>
-                        <p class="font-bold text-slate-700 text-sm leading-relaxed">{{item.content}}</p>
+                        <p class="font-bold text-slate-700 text-sm leading-relaxed whitespace-pre-line">{{item.content}}</p>
                       </div>
                     </div>
                   </template>
 
                   <template v-else-if="page.label === 'Tickets'">
                     <div v-for="item in getSortedData('Tickets')" class="bg-toyRed/5 border-2 border-toyRed/20 rounded-3xl p-5 border-dashed relative overflow-hidden mb-4">
-                      <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
-                      <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
+                      <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-inner"></div>
+                      <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full shadow-inner"></div>
                       <div class="flex justify-between items-center mb-2">
                         <span class="font-black text-toyRed text-sm">{{item.title}}</span>
                         <i class="fas fa-qrcode text-toyRed/20 text-2xl"></i>
                       </div>
-                      <p class="text-xs font-bold text-slate-500">{{item.content}}</p>
+                      <p class="text-xs font-bold text-slate-500 whitespace-pre-line">{{item.content}}</p>
                     </div>
                   </template>
 
                   <template v-else>
-                    <div v-for="item in getSortedData(page.label)" class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-b-4 border-slate-200">
-                      <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" :style="{backgroundColor: page.color + '20', color: page.color}">
-                        <i :class="page.icon + ' text-xs'"></i>
+                    <div v-for="item in getSortedData(page.label)" class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-b-4 border-slate-200 mb-2">
+                      <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0" :style="{backgroundColor: page.color + '20', color: page.color}">
+                        <i :class="page.icon + ' text-sm'"></i>
                       </div>
-                      <div>
-                        <span class="block font-black text-[10px] uppercase opacity-40">{{item.title || 'Info'}}</span>
-                        <p class="text-sm font-bold text-slate-700">{{item.content}}</p>
+                      <div class="flex-1">
+                        <span class="block font-black text-[10px] uppercase opacity-40">{{item.title || 'INFO'}}</span>
+                        <p class="text-sm font-bold text-slate-700 whitespace-pre-line">{{item.content}}</p>
                       </div>
                     </div>
                   </template>
 
                 </div>
-
               </div>
             </div>
           </div>
@@ -144,7 +142,7 @@
          style="height: calc(75px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
       <div v-for="(nav, idx) in navItems" :key="idx" 
            @click="goTo(idx)" 
-           :class="activeIdx === idx ? 'text-toyBlue scale-110 font-black' : 'text-slate-300'"
+           :class="activeIdx === idx ? 'text-toyBlue scale-110' : 'text-slate-300'"
            class="nav-item btn-bounce">
         <i :class="nav.icon + ' text-xl'"></i>
         <span class="nav-text">{{ nav.label }}</span>
@@ -172,7 +170,61 @@
         const currentDate = ref('5/21');
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
         const isEditing = ref({});
-        const travelData = ref({ Plan: {}, Tickets: [], Flight: [], Hotel: [], Map: [], Pack: [], Budget: [] });
+        
+        // 預載入你的完整行程
+        const travelData = ref({
+          Plan: {
+            '5/21': [
+              { title: '00:05', content: '香港 (HKG) 出發 ➔ 經杜拜轉機 (EK381 & EK001)' },
+              { title: '12:25', content: '抵達倫敦希斯路機場 (LHR)' },
+              { title: '14:30', content: '搭 Elizabeth Line 前往 Ilford (車費約 £15.50)' },
+              { title: 'Hotel', content: 'Best Western Greater London Hotel' }
+            ],
+            '5/22': [
+              { title: '13:50', content: '抵達 Wembley Park (需預留 1 小時車程)' },
+              { title: '14:00', content: 'Mundo Pixar Experience (體驗 55min)' }
+            ],
+            '5/23': [
+              { title: '11:07', content: 'London Euston 出發 (Avanti West Coast)' },
+              { title: '13:23', content: '抵達 Liverpool Lime Street' },
+              { title: '20:00', content: '晚餐預約：Belzan' }
+            ],
+            '5/24': [
+              { title: '09:45', content: 'Anfield Stadium Tour (球場導賞)' },
+              { title: '16:00', content: '利物浦 vs 賓福特 (Match Day!)' }
+            ],
+            '5/29': [
+              { title: '14:30', content: '聖家堂 (Sagrada Família) 入場' },
+              { title: '15:15', content: '登塔 (Passion Facade)' }
+            ],
+            '6/4': [
+              { title: '09:30', content: 'Disneyland Paris (全日狂歡)' },
+              { title: '22:40', content: 'Disney Dreams! 煙花匯演' }
+            ]
+          },
+          Tickets: [
+            { title: 'LFC vs Brentford', content: '門票已入 NFC Apple Wallet' },
+            { title: 'Mundo Pixar', content: '5/22 14:00 (需提早 10 分鐘到)' },
+            { title: 'Crazy Horse', content: '6/2 22:30 (禁穿運動鞋!)' }
+          ],
+          Flight: [
+            { title: 'HKG-LHR', content: '5/21 00:05 (EK381/EK001)' },
+            { title: 'LGW-BCN', content: '5/28 13:00 (BA8089)' }
+          ],
+          Hotel: [
+            { title: 'London', content: 'Best Western Greater London Hotel' }
+          ],
+          Map: [
+            { title: 'LHR to Ilford', content: 'Elizabeth Line (£15.50)' }
+          ],
+          Pack: [
+            { title: 'Clothing', content: '倫敦 5 月天氣約 10-18°C，帶薄外套' }
+          ],
+          Budget: [
+            { title: 'Elizabeth Line', content: '£15.50' },
+            { title: 'London Bus', content: 'Flat rate £1.75' }
+          ]
+        });
 
         const navItems = [
           { label: 'Plan', icon: 'fas fa-calendar-day', color: '#F1C40F' },
@@ -199,8 +251,6 @@
         };
 
         const toggleEdit = async (label) => {
-          if (loading.value && isEditing.value[label]) return;
-
           if (isEditing.value[label]) {
             loading.value = true;
             try {
@@ -208,7 +258,8 @@
               await db.ref('universalData').set(cleanData);
               isEditing.value[label] = false;
             } catch (err) {
-              alert("儲存唔到： " + err.message);
+              console.error("Save Error:", err);
+              alert("儲存失敗，請檢查 Monday Firebase 設定！");
             } finally {
               loading.value = false;
             }
@@ -218,13 +269,11 @@
         };
 
         const addItem = (label) => {
-          const target = getRawData(label);
-          target.push({ title: label === 'Plan' ? '09:00' : '', content: '' });
+          getRawData(label).push({ title: label === 'Plan' ? '09:00' : '', content: '' });
         };
 
         const removeItem = (label, idx) => {
-          const target = getRawData(label);
-          target.splice(idx, 1);
+          getRawData(label).splice(idx, 1);
         };
 
         const goTo = (idx) => {
@@ -234,10 +283,7 @@
         onMounted(() => {
           db.ref('universalData').on('value', (s) => {
             const val = s.val();
-            if (val) {
-              navItems.forEach(n => { if(!val[n.label]) val[n.label] = (n.label === 'Plan' ? {} : []); });
-              travelData.value = val;
-            }
+            if (val) travelData.value = val;
             loading.value = false;
           });
 
