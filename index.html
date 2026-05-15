@@ -22,58 +22,114 @@
       .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #E0F2FE; }
       .nav-item { @apply flex flex-col items-center justify-center cursor-pointer flex-1 transition-all duration-300; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
-      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col h-[calc(100%-25px)] mx-4 relative; }
-      .edit-input { @apply w-full p-2 mb-2 border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm font-bold bg-blue-50/50; }
+      
+      /* 卡片設計：立體感 + 網格紙底紋 */
+      .card-toy { 
+        @apply bg-white rounded-[2.5rem] p-6 shadow-[0_15px_40px_rgba(0,0,0,0.12)] 
+               flex flex-col h-[calc(100%-35px)] mx-4 mt-2 transition-all duration-300 relative overflow-hidden;
+        background-image: radial-gradient(#e5e7eb 1.2px, transparent 1.2px);
+        background-size: 24px 24px;
+      }
+      
+      .toy-title { @apply font-black italic tracking-tight uppercase text-2xl; }
+      .toy-label { @apply text-[10px] font-black uppercase tracking-widest opacity-40 mb-1; }
+      .btn-bounce { @apply active:scale-90 transition-transform duration-150; }
+      
+      .edit-input { @apply w-full p-3 mb-2 border-2 border-dashed border-slate-200 rounded-2xl outline-none text-sm font-bold bg-blue-50/50 focus:border-toyBlue; }
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    .header-logo { height: 60px; transform: scale(1.5); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+    .header-logo { height: 60px; transform: scale(1.4); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1)); }
+    [v-cloak] { display: none; }
   </style>
 </head>
 <body>
 
   <div id="app" class="app-container" v-cloak>
     
-    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-50" style="height: 75px;">
+    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-[110]" style="height: 75px;">
       <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026" class="header-logo object-contain">
-      <div v-if="loading" class="absolute right-6 top-1/2 -translate-y-1/2"><div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div></div>
+      <div v-if="loading" class="absolute right-6 top-1/2 -translate-y-1/2">
+        <div class="w-3 h-3 bg-toyGreen rounded-full animate-ping"></div>
+      </div>
     </header>
 
     <main class="flex-1 w-full overflow-hidden relative">
-      <div class="swiper mySwiper h-full w-full pt-4">
+      <div class="swiper mySwiper h-full w-full">
         <div class="swiper-wrapper">
           
-          <div v-for="(page, index) in navItems" :key="index" class="swiper-slide">
-            <div class="card-toy" :style="{ borderLeft: '12px solid ' + page.color }">
+          <div v-for="(page, index) in navItems" :key="index" class="swiper-slide py-4">
+            <div class="card-toy" :style="{ borderTop: '12px solid ' + page.color }">
               
-              <div class="flex justify-between items-center mb-4 shrink-0">
-                <h2 class="text-xl font-black uppercase" :style="{ color: page.color }">{{ page.label }}</h2>
-                <button @click="toggleEdit(page.label)">
-                  <i :class="isEditing[page.label] ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i>
+              <div class="flex justify-between items-start mb-5 shrink-0">
+                <div>
+                  <p class="toy-label" :style="{ color: page.color }">Step {{index + 1}}</p>
+                  <h2 class="toy-title" :style="{ color: page.color }">{{ page.label }}</h2>
+                </div>
+                <button @click.stop="toggleEdit(page.label)" class="btn-bounce bg-slate-50 p-3 rounded-2xl shadow-sm">
+                  <i :class="isEditing[page.label] ? 'fas fa-check text-toyGreen text-xl' : 'fas fa-pen text-slate-300 text-lg'"></i>
                 </button>
               </div>
               
-              <div class="flex-1 overflow-y-auto no-scrollbar" style="-webkit-overflow-scrolling: touch;">
+              <div class="flex-1 overflow-y-auto no-scrollbar">
                 
-                <div v-if="page.label === 'Plan'" class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1 border-b swiper-no-swiping shrink-0">
-                  <button v-for="date in availableDates" @click="currentDate = date" :class="currentDate === date ? 'bg-toyYellow text-white border-toyYellow' : 'bg-white text-slate-400 border-slate-100'" class="px-4 py-1 rounded-xl text-[10px] font-black border shrink-0 transition-all">{{date}}</button>
-                </div>
-
-                <div v-if="isEditing[page.label]" class="space-y-3 pb-20">
-                  <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
-                    <input v-model="item.title" class="edit-input" :placeholder="page.label === 'Plan' ? 'Time (e.g. 09:00)' : 'Title / No.'">
-                    <textarea v-model="item.content" class="edit-input text-xs" :placeholder="'Add ' + page.label + ' details...'"></textarea>
-                    <button @click="removeItem(page.label, idx)" class="absolute top-2 right-2 text-toyRed p-1 opacity-50">✕</button>
-                  </div>
-                  <button @click="addItem(page.label)" class="w-full py-3 border-2 border-dashed rounded-xl text-xs font-black" :style="{ color: page.color, borderColor: page.color }">
-                    + ADD ITEM
+                <div v-if="page.label === 'Plan'" class="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-2 swiper-no-swiping shrink-0">
+                  <button v-for="date in availableDates" @click="currentDate = date" 
+                    :class="currentDate === date ? 'bg-toyYellow text-white shadow-md scale-105' : 'bg-slate-100 text-slate-400 border-transparent'" 
+                    class="px-5 py-2 rounded-2xl text-[10px] font-black border transition-all shrink-0">
+                    {{date}}
                   </button>
                 </div>
 
-                <div v-else class="space-y-1 pb-10">
-                  <div v-for="item in getSortedData(page.label)" :key="item.title" class="flex gap-4 p-4 border-b border-slate-50 items-start">
-                    <span class="font-black text-xs w-16 pt-1 shrink-0" :style="{ color: page.color }">{{item.title}}</span>
-                    <p class="font-bold text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{item.content}}</p>
+                <div v-if="isEditing[page.label]" class="space-y-3 pb-20">
+                  <div v-for="(item, idx) in getRawData(page.label)" :key="idx" class="p-4 bg-slate-50 rounded-3xl relative border-2 border-dashed border-slate-200">
+                    <input v-model="item.title" class="edit-input" :placeholder="page.label === 'Plan' ? 'Time (e.g. 09:00)' : 'Title / Flight No.'">
+                    <textarea v-model="item.content" class="edit-input text-xs" :placeholder="'Add ' + page.label + ' details...'"></textarea>
+                    <button @click="removeItem(page.label, idx)" class="absolute top-4 right-4 text-toyRed p-1 opacity-40">✕</button>
                   </div>
+                  <button @click="addItem(page.label)" class="w-full py-4 border-2 border-dashed rounded-3xl text-xs font-black transition-colors" :style="{ color: page.color, borderColor: page.color, backgroundColor: page.color + '05' }">
+                    + ADD NEW ITEM
+                  </button>
+                </div>
+
+                <div v-else class="space-y-2 pb-10">
+                  
+                  <template v-if="page.label === 'Plan'">
+                    <div v-for="item in getSortedData('Plan')" class="flex gap-4">
+                      <div class="flex flex-col items-center">
+                        <div class="w-3 h-3 rounded-full bg-toyYellow"></div>
+                        <div class="w-0.5 h-full bg-slate-100"></div>
+                      </div>
+                      <div class="pb-6">
+                        <span class="text-toyWoody font-black text-xs block mb-1">{{item.title}}</span>
+                        <p class="font-bold text-slate-700 text-sm leading-relaxed">{{item.content}}</p>
+                      </div>
+                    </div>
+                  </template>
+
+                  <template v-else-if="page.label === 'Tickets'">
+                    <div v-for="item in getSortedData('Tickets')" class="bg-toyRed/5 border-2 border-toyRed/20 rounded-3xl p-5 border-dashed relative overflow-hidden mb-4">
+                      <div class="absolute -left-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
+                      <div class="absolute -right-3 top-1/2 -translate-y-1/2 w-6 h-6 bg-white rounded-full"></div>
+                      <div class="flex justify-between items-center mb-2">
+                        <span class="font-black text-toyRed text-sm">{{item.title}}</span>
+                        <i class="fas fa-qrcode text-toyRed/20 text-2xl"></i>
+                      </div>
+                      <p class="text-xs font-bold text-slate-500">{{item.content}}</p>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    <div v-for="item in getSortedData(page.label)" class="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl border-b-4 border-slate-200">
+                      <div class="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" :style="{backgroundColor: page.color + '20', color: page.color}">
+                        <i :class="page.icon + ' text-xs'"></i>
+                      </div>
+                      <div>
+                        <span class="block font-black text-[10px] uppercase opacity-40">{{item.title || 'Info'}}</span>
+                        <p class="text-sm font-bold text-slate-700">{{item.content}}</p>
+                      </div>
+                    </div>
+                  </template>
+
                 </div>
 
               </div>
@@ -84,12 +140,12 @@
       </div>
     </main>
 
-    <nav class="bg-white flex border-t shrink-0 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]" 
+    <nav class="bg-white flex border-t shrink-0 z-[110] shadow-[0_-5px_25px_rgba(0,0,0,0.05)]" 
          style="height: calc(75px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
       <div v-for="(nav, idx) in navItems" :key="idx" 
            @click="goTo(idx)" 
-           :class="activeIdx === idx ? 'text-toyBlue scale-110' : 'text-slate-300'"
-           class="nav-item">
+           :class="activeIdx === idx ? 'text-toyBlue scale-110 font-black' : 'text-slate-300'"
+           class="nav-item btn-bounce">
         <i :class="nav.icon + ' text-xl'"></i>
         <span class="nav-text">{{ nav.label }}</span>
       </div>
@@ -142,33 +198,21 @@
           return [...data].sort((a, b) => (a.title || "").localeCompare(b.title || "", undefined, {numeric: true}));
         };
 
-        const loadFirebase = () => {
-          db.ref('universalData').on('value', (s) => {
-            const val = s.val();
-            if (val) {
-              // 確保結構完整
-              navItems.forEach(n => { if(!val[n.label]) val[n.label] = (n.label === 'Plan' ? {} : []); });
-              travelData.value = val;
-            }
-            loading.value = false;
-          });
-        };
+        const toggleEdit = async (label) => {
+          if (loading.value && isEditing.value[label]) return;
 
-        const toggleEdit = (label) => {
           if (isEditing.value[label]) {
-            // 保存模式
             loading.value = true;
-            // 關鍵修正：將 Proxy 物件轉為純 JSON 物件再上傳
-            const cleanData = JSON.parse(JSON.stringify(travelData.value));
-            db.ref('universalData').set(cleanData).then(() => {
-              loading.value = false;
+            try {
+              const cleanData = JSON.parse(JSON.stringify(travelData.value));
+              await db.ref('universalData').set(cleanData);
               isEditing.value[label] = false;
-            }).catch(err => {
-              alert("儲存失敗：" + err.message);
+            } catch (err) {
+              alert("儲存唔到： " + err.message);
+            } finally {
               loading.value = false;
-            });
+            }
           } else {
-            // 進入編輯
             isEditing.value[label] = true;
           }
         };
@@ -184,14 +228,19 @@
         };
 
         const goTo = (idx) => {
-          if (swiperInstance.value) {
-            swiperInstance.value.slideTo(idx);
-            activeIdx.value = idx;
-          }
+          if (swiperInstance.value) swiperInstance.value.slideTo(idx);
         };
 
         onMounted(() => {
-          loadFirebase();
+          db.ref('universalData').on('value', (s) => {
+            const val = s.val();
+            if (val) {
+              navItems.forEach(n => { if(!val[n.label]) val[n.label] = (n.label === 'Plan' ? {} : []); });
+              travelData.value = val;
+            }
+            loading.value = false;
+          });
+
           swiperInstance.value = new Swiper(".mySwiper", { 
             speed: 400,
             on: { slideChange: function() { activeIdx.value = this.activeIndex; } }
