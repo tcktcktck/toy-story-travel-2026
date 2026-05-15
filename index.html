@@ -10,113 +10,173 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { toyBlue: '#2A75B3', toyYellow: '#F1C40F', toyRed: '#E74C3C', toyGreen: '#2ECC71', toyPurple: '#9B59B6', toyWoody: '#F39C12' }}}
+    }
+  </script>
+  
   <style type="text/tailwindcss">
     @layer components {
       .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #E0F2FE; }
-      
-      /* 核心滾動容器 */
-      .card-toy { 
-        @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-[8px] border-slate-200 relative mx-4; 
-        height: calc(100dvh - 165px); /* 動態預留 Header 與 Nav 空間 */
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
-
-      .nav-item { @apply flex flex-col items-center justify-center cursor-pointer text-slate-300 flex-1 py-2; }
+      .nav-item { @apply flex flex-col items-center justify-center cursor-pointer text-slate-300 flex-1 transition-all; }
       .nav-item.active { @apply text-toyBlue scale-110; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
+      .edit-input { @apply w-full p-2 mb-2 border-2 border-dashed border-slate-200 rounded-xl outline-none text-sm font-bold bg-blue-50/50; }
+      .date-btn { @apply px-4 py-1.5 rounded-xl font-black text-[10px] transition-all border-2 shrink-0; }
+      .date-btn-active { @apply bg-toyYellow text-white border-toyYellow shadow-md; }
+      .date-btn-inactive { @apply bg-white text-slate-400 border-slate-100; }
     }
-
-    /* Logo 置中優化 */
-    .header-slim { height: 70px; @apply bg-toyBlue relative z-50 flex items-center justify-center border-b-4 border-toyYellow; }
-    .logo-img { height: 100px; position: absolute; top: 50%; transform: translateY(-45%); z-index: 60; }
-    
-    .no-scrollbar::-webkit-scrollbar { display: none; }
     [v-cloak] { display: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
   </style>
 </head>
-<body>
+<body class="overscroll-none">
 
   <div id="app" class="app-container" v-cloak>
-    <header class="header-slim">
-      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026" class="logo-img object-contain">
+    
+    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative" style="height: 70px;">
+      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" 
+           alt="Euro 2026" 
+           class="object-contain" 
+           style="height: 55px; width: auto;">
+      <div v-if="loading" class="absolute right-4"><div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div></div>
     </header>
 
-    <main class="swiper mySwiper flex-1 w-full pt-6">
-      <div class="swiper-wrapper">
-        
-        <div class="swiper-slide">
-          <div class="card-toy border-l-[12px] border-toyYellow">
-            <h2 class="text-xl font-black text-toyYellow mb-4 uppercase">Plan</h2>
-            <div class="space-y-4">
-              <div v-for="i in 10" class="p-4 border-b border-slate-50 flex gap-4">
-                <span class="text-toyWoody font-black text-xs">09:00</span>
-                <p class="text-sm font-bold text-slate-600">這是一段測試文字，證明內容可以下拉滾動。更多行程內容...</p>
+    <main class="flex-1 w-full overflow-hidden">
+      <div class="swiper mySwiper h-full w-full pt-4">
+        <div class="swiper-wrapper">
+          
+          <div class="swiper-slide px-4">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyYellow" 
+                 style="height: calc(100% - 20px);">
+              <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-black text-toyYellow uppercase">Plan</h2>
+                <button @click="toggleEdit('itinerary')"><i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
+              </div>
+              
+              <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1 swiper-no-swiping border-b border-slate-50 shrink-0">
+                <button v-for="date in availableDates" :key="date" @click="currentDate = date" :class="currentDate === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">{{ date }}</button>
+              </div>
+
+              <div class="flex-1 overflow-y-auto pr-1 no-scrollbar" style="-webkit-overflow-scrolling: touch;">
+                <div v-if="isEditing.itinerary" class="space-y-3 pb-10">
+                  <div v-for="(item, idx) in travelData.itinerary[currentDate]" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
+                    <input v-model="item.time" class="edit-input w-24" placeholder="09:00">
+                    <textarea v-model="item.activity" class="edit-input text-xs" placeholder="Add activity..."></textarea>
+                    <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed p-1">✕</button>
+                  </div>
+                  <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ ADD</button>
+                </div>
+                <div v-else class="space-y-1 pb-10">
+                  <div v-for="item in sortedItinerary" :key="item.time" class="flex gap-4 p-4 border-b border-slate-50 items-start">
+                    <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
+                    <p class="font-bold text-sm text-slate-700 leading-relaxed whitespace-pre-line">{{item.activity}}</p>
+                  </div>
+                  <div v-if="!sortedItinerary.length" class="text-center pt-10 text-slate-300 font-bold text-sm italic">No plans for this day yet.</div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <div class="swiper-slide">
-          <div class="card-toy border-l-[12px] border-toyRed">
-            <h2 class="text-xl font-black text-toyRed mb-4 uppercase">Tickets</h2>
-            <div class="flex flex-col items-center justify-center h-48 bg-red-50 rounded-3xl border-2 border-dashed border-red-200">
-              <i class="fas fa-ticket-alt text-4xl text-toyRed mb-2"></i>
-              <p class="text-xs font-black text-toyRed">NO TICKETS ADDED</p>
+          <div class="swiper-slide px-4">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyRed" style="height: calc(100% - 20px);">
+              <h2 class="text-xl font-black text-toyRed mb-4 uppercase">Tickets</h2>
+              <div class="flex-1 flex flex-col items-center justify-center bg-red-50 rounded-3xl border-2 border-dashed border-red-100">
+                <i class="fas fa-ticket-alt text-4xl text-toyRed/20 mb-2"></i>
+                <p class="text-[10px] font-black text-toyRed/40 tracking-widest">TICKET REPOSITORY</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="swiper-slide">
-          <div class="card-toy border-l-[12px] border-toyPurple">
-            <h2 class="text-xl font-black text-toyPurple mb-4 uppercase">Flight</h2>
-            <div class="p-4 bg-purple-50 rounded-2xl">
-              <p class="text-sm font-bold text-toyPurple">Flight Data Section</p>
+          <div class="swiper-slide px-4">
+            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyPurple" style="height: calc(100% - 20px);">
+              <h2 class="text-xl font-black text-toyPurple mb-4 uppercase">Flight</h2>
+              <div class="flex-1 bg-purple-50 rounded-3xl p-6 text-center text-toyPurple/50 font-black italic pt-20">FLIGHT DATA LOADING...</div>
             </div>
           </div>
-        </div>
 
+        </div>
       </div>
     </main>
 
-    <nav class="bg-white flex border-t shrink-0 z-50 pb-[env(safe-area-inset-bottom)] h-[75px]">
-      <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-day"></i><span class="nav-text">Plan</span></div>
-      <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-ticket-alt"></i><span class="nav-text">Tickets</span></div>
-      <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-plane"></i><span class="nav-text">Flight</span></div>
-      <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-hotel"></i><span class="nav-text">Hotel</span></div>
-      <div @click="goTo(4)" :class="{active: activeIdx === 4}" class="nav-item"><i class="fas fa-map-marked-alt"></i><span class="nav-text">Map</span></div>
-      <div @click="goTo(5)" :class="{active: activeIdx === 5}" class="nav-item"><i class="fas fa-suitcase"></i><span class="nav-text">Pack</span></div>
-      <div @click="goTo(6)" :class="{active: activeIdx === 6}" class="nav-item"><i class="fas fa-piggy-bank"></i><span class="nav-text">Budget</span></div>
+    <nav class="bg-white flex border-t shrink-0 z-50 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]" 
+         style="height: calc(70px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
+      <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-day text-lg"></i><span class="nav-text">Plan</span></div>
+      <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-ticket-alt text-lg"></i><span class="nav-text">Tickets</span></div>
+      <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-plane text-lg"></i><span class="nav-text">Flight</span></div>
+      <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-hotel text-lg"></i><span class="nav-text">Hotel</span></div>
+      <div @click="goTo(4)" :class="{active: activeIdx === 4}" class="nav-item"><i class="fas fa-map-marked-alt text-lg"></i><span class="nav-text">Map</span></div>
+      <div @click="goTo(5)" :class="{active: activeIdx === 5}" class="nav-item"><i class="fas fa-suitcase text-lg"></i><span class="nav-text">Pack</span></div>
+      <div @click="goTo(6)" :class="{active: activeIdx === 6}" class="nav-item"><i class="fas fa-piggy-bank text-lg"></i><span class="nav-text">Budget</span></div>
     </nav>
   </div>
 
   <script>
-    const { createApp, ref, onMounted } = Vue;
+    const { createApp, ref, onMounted, computed } = Vue;
+
+    // Firebase 連接
+    const firebaseConfig = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", projectId: "toystorytravel", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     createApp({
       setup() {
         const swiperRef = ref(null);
         const activeIdx = ref(0);
+        const loading = ref(true);
+        const currentDate = ref('5/21');
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
+        const isEditing = ref({ itinerary:false });
+        const travelData = ref({ itinerary: {} });
 
-        const goTo = (idx) => {
-          swiperRef.value.slideTo(idx);
-          activeIdx.value = idx;
+        const sortedItinerary = computed(() => {
+          const list = travelData.value.itinerary[currentDate.value] || [];
+          return [...list].sort((a, b) => a.time.localeCompare(b.time));
+        });
+
+        const loadFirebase = () => {
+          db.ref('travelData').on('value', (s) => {
+            const d = s.val() || {};
+            if(!d.itinerary) d.itinerary = {};
+            availableDates.forEach(date => { if(!d.itinerary[date]) d.itinerary[date] = []; });
+            travelData.value = d; loading.value = false;
+          });
         };
 
+        const saveToFirebase = () => {
+          loading.value = true;
+          db.ref('travelData').set(travelData.value).then(() => loading.value = false);
+        };
+
+        const toggleEdit = (p) => {
+          isEditing.value[p] = !isEditing.value[p];
+          if(!isEditing.value[p]) saveToFirebase();
+        };
+
+        const addItem = (t) => {
+          if(t==='itinerary') {
+            if(!travelData.value.itinerary[currentDate.value]) travelData.value.itinerary[currentDate.value] = [];
+            travelData.value.itinerary[currentDate.value].push({time:'09:00', activity:''});
+          }
+        };
+
+        const goTo = (idx) => { swiperRef.value.slideTo(idx); activeIdx.value = idx; };
+
         onMounted(() => {
+          loadFirebase();
           swiperRef.value = new Swiper(".mySwiper", { 
-            speed: 400,
-            allowTouchMove: true, // 允許滑動切換頁面
-            on: {
-              slideChange: function() {
-                activeIdx.value = this.activeIndex;
-              }
-            }
+            speed: 300,
+            noSwiping: true,
+            noSwipingClass: 'swiper-no-swiping',
+            on: { slideChange: function() { activeIdx.value = this.activeIndex; } } 
           });
         });
 
-        return { activeIdx, goTo }
+        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, sortedItinerary }
       }
     }).mount('#app')
   </script>
