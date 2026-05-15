@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Euro 2026 Adventure</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -18,98 +17,63 @@
       theme: { extend: { colors: { toyBlue: '#2A75B3', toyYellow: '#F1C40F', toyRed: '#E74C3C', toyGreen: '#2ECC71', toyPurple: '#9B59B6', toyWoody: '#F39C12' }}}
     }
   </script>
-  
   <style type="text/tailwindcss">
     @layer components {
       .app-container { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; background-color: #E0F2FE; }
       .nav-item { @apply flex flex-col items-center justify-center cursor-pointer flex-1 transition-all duration-300; }
       .nav-text { @apply text-[8px] font-black mt-1 uppercase tracking-tighter; }
-      .date-btn { @apply px-4 py-1.5 rounded-xl font-black text-[10px] transition-all border-2 shrink-0; }
-      .date-btn-active { @apply bg-toyYellow text-white border-toyYellow shadow-md; }
-      .date-btn-inactive { @apply bg-white text-slate-400 border-slate-100; }
+      .card-toy { @apply bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col h-[calc(100%-25px)] mx-4; }
     }
-    [v-cloak] { display: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    
-    /* Logo 放大效果 */
-    .logo-container img {
-      height: 55px; 
-      width: auto; 
-      transform: scale(1.4); 
-      transform-origin: center;
-      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
-    }
+    .header-logo { height: 60px; transform: scale(1.5); filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
   </style>
 </head>
-<body class="overscroll-none">
+<body>
 
   <div id="app" class="app-container" v-cloak>
     
-    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-[100]" style="height: 75px;">
-      <div class="logo-container">
-        <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026">
-      </div>
-      <div v-if="loading" class="absolute right-6"><div class="w-2.5 h-2.5 bg-toyGreen rounded-full animate-ping"></div></div>
+    <header class="bg-toyBlue border-b-4 border-toyYellow shrink-0 flex items-center justify-center relative z-50" style="height: 75px;">
+      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" alt="Euro 2026" class="header-logo object-contain">
     </header>
 
     <main class="flex-1 w-full overflow-hidden relative">
       <div class="swiper mySwiper h-full w-full pt-4">
         <div class="swiper-wrapper">
           
-          <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyYellow h-[calc(100%-25px)]">
-              <div class="flex justify-between items-center mb-2 shrink-0">
-                <h2 class="text-xl font-black text-toyYellow uppercase">Plan</h2>
-                <button @click="toggleEdit('itinerary')">
-                  <i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i>
-                </button>
-              </div>
+          <div v-for="(page, index) in navItems" :key="index" class="swiper-slide">
+            <div class="card-toy" :style="{ borderLeft: '12px solid ' + page.color }">
+              <h2 class="text-xl font-black mb-4 uppercase" :style="{ color: page.color }">{{ page.label }}</h2>
               
-              <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1 swiper-no-swiping border-b border-slate-50 shrink-0">
-                <button v-for="date in availableDates" :key="date" @click="currentDate = date" :class="currentDate === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">{{ date }}</button>
-              </div>
-
-              <div class="flex-1 overflow-y-auto pr-1 no-scrollbar" style="-webkit-overflow-scrolling: touch;">
-                <div v-if="isEditing.itinerary" class="space-y-3 pb-10">
-                  <div v-for="(item, idx) in travelData.itinerary[currentDate]" :key="idx" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
-                    <input v-model="item.time" class="w-full p-2 mb-1 border-b font-black text-toyWoody outline-none bg-transparent" placeholder="09:00">
-                    <textarea v-model="item.activity" class="w-full p-2 text-xs font-bold text-slate-600 outline-none bg-transparent" placeholder="Activity..."></textarea>
-                    <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed opacity-30 hover:opacity-100">✕</button>
+              <div class="flex-1 overflow-y-auto no-scrollbar" style="-webkit-overflow-scrolling: touch;">
+                
+                <template v-if="page.label === 'Plan'">
+                  <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1 border-b swiper-no-swiping">
+                    <button v-for="date in availableDates" @click="currentDate = date" :class="currentDate === date ? 'bg-toyYellow text-white' : 'bg-white text-slate-400'" class="px-4 py-1 rounded-xl text-[10px] font-black border">{{date}}</button>
                   </div>
-                  <button @click="addItem('itinerary')" class="w-full py-3 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ ADD PLAN</button>
-                </div>
-                <div v-else class="space-y-1 pb-10">
-                  <div v-for="item in sortedItinerary" :key="item.time" class="flex gap-4 p-4 border-b border-slate-50 items-start">
-                    <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
-                    <p class="font-bold text-sm text-slate-700 leading-relaxed">{{item.activity}}</p>
+                  <div class="space-y-4">
+                    <div v-for="item in sortedItinerary" class="flex gap-4 p-3 border-b items-start">
+                      <span class="text-toyWoody font-black text-xs w-10">{{item.time}}</span>
+                      <p class="font-bold text-sm text-slate-700">{{item.activity}}</p>
+                    </div>
                   </div>
-                </div>
+                </template>
+
+                <template v-else>
+                  <div class="flex flex-col items-center justify-center h-full opacity-20 italic font-black">
+                    <i :class="page.icon" class="text-6xl mb-4"></i>
+                    <p>{{ page.label }} Content Coming Soon</p>
+                  </div>
+                </template>
+
               </div>
             </div>
           </div>
 
-          <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyRed h-[calc(100%-25px)]">
-              <h2 class="text-xl font-black text-toyRed mb-4 uppercase">Tickets</h2>
-              <div class="flex-1 flex flex-col items-center justify-center bg-red-50 rounded-3xl border-2 border-dashed border-red-100">
-                <i class="fas fa-ticket-alt text-4xl text-toyRed/20 mb-2"></i>
-                <p class="text-[10px] font-black text-toyRed/40 tracking-widest uppercase">My Tickets Area</p>
-              </div>
-            </div>
-          </div>
-
-          <div class="swiper-slide px-4">
-            <div class="bg-white rounded-[2.5rem] p-5 shadow-xl border-b-8 border-slate-200 flex flex-col border-l-[12px] border-toyPurple h-[calc(100%-25px)]">
-              <h2 class="text-xl font-black text-toyPurple mb-4 uppercase">Flight</h2>
-              <div class="flex-1 bg-purple-50 rounded-3xl p-6 text-center text-toyPurple/50 font-black italic flex items-center justify-center">FLIGHT DATA SECTION</div>
-            </div>
-          </div>
-
-          </div>
+        </div>
       </div>
     </main>
 
-    <nav class="bg-white flex border-t shrink-0 z-[100] shadow-[0_-5px_20px_rgba(0,0,0,0.05)]" 
+    <nav class="bg-white flex border-t shrink-0 z-50 shadow-[0_-5px_20px_rgba(0,0,0,0.05)]" 
          style="height: calc(75px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom);">
       
       <div v-for="(nav, idx) in navItems" :key="idx" 
@@ -126,49 +90,30 @@
   <script>
     const { createApp, ref, onMounted, computed } = Vue;
 
-    // Firebase 配置 (請確保您的 DatabaseURL 正確)
-    const firebaseConfig = { 
-      apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", 
-      authDomain: "toystorytravel.firebaseapp.com", 
-      projectId: "toystorytravel", 
-      databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" 
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
     createApp({
       setup() {
         const swiperInstance = ref(null);
         const activeIdx = ref(0);
-        const loading = ref(true);
         const currentDate = ref('5/21');
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28'];
-        const isEditing = ref({ itinerary: false });
         const travelData = ref({ itinerary: {} });
 
+        // 【唯一數據源】如果你之後要加頁面，只需在這裡加一個物件，HTML 會自動生成對應的 Slide
         const navItems = [
-          { label: 'Plan', icon: 'fas fa-calendar-day' },
-          { label: 'Tickets', icon: 'fas fa-ticket-alt' },
-          { label: 'Flight', icon: 'fas fa-plane' },
-          { label: 'Hotel', icon: 'fas fa-hotel' },
-          { label: 'Map', icon: 'fas fa-map-marked-alt' },
-          { label: 'Pack', icon: 'fas fa-suitcase' },
-          { label: 'Budget', icon: 'fas fa-piggy-bank' }
+          { label: 'Plan', icon: 'fas fa-calendar-day', color: '#F1C40F' },
+          { label: 'Tickets', icon: 'fas fa-ticket-alt', color: '#E74C3C' },
+          { label: 'Flight', icon: 'fas fa-plane', color: '#9B59B6' },
+          { label: 'Hotel', icon: 'fas fa-hotel', color: '#2ECC71' },
+          { label: 'Map', icon: 'fas fa-map-marked-alt', color: '#3498DB' },
+          { label: 'Pack', icon: 'fas fa-suitcase', color: '#F39C12' },
+          { label: 'Budget', icon: 'fas fa-piggy-bank', color: '#16A085' }
+          // 如果要加第 8 個，直接加在這裡：{ label: 'New', icon: 'fas fa-star', color: '#000' }
         ];
 
         const sortedItinerary = computed(() => {
           const list = travelData.value.itinerary[currentDate.value] || [];
           return [...list].sort((a, b) => a.time.localeCompare(b.time));
         });
-
-        const loadFirebase = () => {
-          db.ref('travelData').on('value', (s) => {
-            const d = s.val() || { itinerary: {} };
-            availableDates.forEach(date => { if(!d.itinerary[date]) d.itinerary[date] = []; });
-            travelData.value = d;
-            loading.value = false;
-          });
-        };
 
         const goTo = (idx) => {
           if (swiperInstance.value) {
@@ -177,34 +122,14 @@
           }
         };
 
-        const toggleEdit = (p) => {
-          isEditing.value[p] = !isEditing.value[p];
-          if(!isEditing.value[p]) {
-            loading.value = true;
-            db.ref('travelData').set(travelData.value).then(() => loading.value = false);
-          }
-        };
-
-        const addItem = (t) => {
-          if(!travelData.value.itinerary[currentDate.value]) travelData.value.itinerary[currentDate.value] = [];
-          travelData.value.itinerary[currentDate.value].push({ time: '09:00', activity: '' });
-        };
-
         onMounted(() => {
-          loadFirebase();
-          // 初始化 Swiper 並確保它可觸控切換
           swiperInstance.value = new Swiper(".mySwiper", { 
             speed: 400,
-            allowTouchMove: true,
-            on: {
-              slideChange: function() {
-                activeIdx.value = this.activeIndex;
-              }
-            }
+            on: { slideChange: function() { activeIdx.value = this.activeIndex; } }
           });
         });
 
-        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, sortedItinerary, navItems }
+        return { travelData, activeIdx, goTo, currentDate, availableDates, sortedItinerary, navItems }
       }
     }).mount('#app')
   </script>
