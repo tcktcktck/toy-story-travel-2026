@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Euro 2026 | Mission Control V5.5</title>
+  <title>Euro 2026 | Full Mission Control V5.7</title>
   
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,18 +12,6 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-
-  <script>
-    tailwind.config = {
-      darkMode: 'media',
-      theme: { 
-        extend: { 
-          colors: { toyBlue: '#2A75B3', toyYellow: '#F1C40F', toyRed: '#E74C3C', toyGreen: '#2ECC71' },
-          borderRadius: { 'toy': '2.5rem' }
-        }
-      }
-    }
-  </script>
 
   <style type="text/tailwindcss">
     @layer components {
@@ -47,20 +35,16 @@
 <body>
 
   <div id="app" class="app-container" v-cloak>
-    <header class="bg-toyBlue dark:bg-slate-950 shrink-0 flex items-center justify-between px-6 border-b-4 border-toyYellow z-50 shadow-xl" style="height: 85px;">
-      <div class="flex items-center gap-3">
-        <img src="pixelframe-design_26fq9zkc-removebg-preview.png" 
-             alt="Logo" @click="triggerLogoJoy"
-             class="w-12 h-12 object-contain rounded-xl active:scale-95 transition-transform"
-             style="image-rendering: pixelated; image-rendering: -moz-crisp-edges;"
-             onerror="this.style.display='none';">
-        <div class="flex flex-col">
-          <h1 class="text-white font-black italic uppercase text-lg leading-none tracking-tighter">Euro 2026</h1>
-          <span class="text-toyYellow text-[10px] font-black tracking-[0.2em] uppercase">Mission Control</span>
-        </div>
-      </div>
-      <div v-if="loading" class="flex gap-1.5">
-        <div v-for="i in 3" :key="i" class="w-2 h-2 bg-toyGreen rounded-full animate-bounce" :style="{ animationDelay: -(i*0.1) + 's' }"></div>
+    <header class="bg-toyBlue dark:bg-slate-950 shrink-0 flex flex-col items-center justify-center border-b-4 border-toyYellow z-50 shadow-xl relative" style="height: 100px;">
+      <img src="pixelframe-design_26fq9zkc-removebg-preview.png" 
+           alt="Logo" @click="triggerLogoJoy"
+           class="w-14 h-14 object-contain active:scale-95 transition-transform mb-1"
+           style="image-rendering: pixelated; image-rendering: -moz-crisp-edges;"
+           onerror="this.style.display='none';">
+      <h1 class="text-white font-black italic uppercase text-[10px] tracking-widest opacity-80">Mission Control • 2026</h1>
+      
+      <div v-if="loading" class="absolute right-6 top-1/2 -translate-y-1/2 flex gap-1">
+        <div v-for="i in 3" :key="i" class="w-1.5 h-1.5 bg-toyGreen rounded-full animate-bounce" :style="{ animationDelay: -(i*0.1) + 's' }"></div>
       </div>
     </header>
 
@@ -87,18 +71,13 @@
                   </button>
                 </div>
 
-                <div v-if="page.label === 'List' && getRawData('List').length === 0" class="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-30 pb-16">
-                  <i class="fas fa-tasks text-6xl text-slate-300"></i>
-                  <p class="font-black text-sm text-slate-500 uppercase tracking-tighter">Mission List Empty.</p>
-                </div>
-
                 <transition-group name="list" tag="div" class="pb-12">
                   <template v-if="isEditing[page.label]">
                     <div v-for="(item, idx) in getRawData(page.label)" :key="'edit-' + page.label + idx" 
                          class="bg-slate-100 dark:bg-slate-900 p-5 rounded-3xl mb-4 relative border-2 border-dashed border-slate-300 dark:border-slate-700">
-                      <input v-model="item.time" class="input-toy" placeholder="🕒 Time">
-                      <input v-model="item.location" class="input-toy" placeholder="📍 Location">
-                      <textarea v-model="item.note" class="input-toy mb-0 text-xs" placeholder="📝 Note" rows="2"></textarea>
+                      <input v-model="item.time" class="input-toy" placeholder="Time">
+                      <input v-model="item.location" class="input-toy" placeholder="Location">
+                      <textarea v-model="item.note" class="input-toy mb-0 text-xs" placeholder="Note" rows="2"></textarea>
                       <button @click="removeItem(page.label, idx)" class="absolute -top-3 -right-3 bg-toyRed text-white w-9 h-9 rounded-full shadow-xl border-4 border-white dark:border-slate-800">
                         <i class="fas fa-times"></i>
                       </button>
@@ -154,55 +133,49 @@
         const swiperInstance = ref(null);
         const activeIdx = ref(0);
         const loading = ref(true);
-        const currentDate = ref('5/22');
+        const currentDate = ref('5/21');
         const isWiggling = ref(false);
         const isEditing = ref({});
-        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28'];
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1'];
         
-        // --- 100% 資料完整回歸 ---
         const travelData = ref({
           Plan: {
-            '5/21': [{ id: 1, time: '12:25', location: 'Heathrow LHR', note: 'Elizabeth Line 前往 Ilford (£15.50)' }],
-            '5/23': [{ id: 5, time: '20:00', location: 'Dinner @ Belzan', note: 'Booking Ref: BQ9QLVH6\nConfirmed via TableAgent' }],
-            '5/24': [
-              { id: 6, time: '09:45', location: 'Anfield Stadium Tour', note: 'LFC-STA-26\n已預約 (Stadium Entry)' },
-              { id: 7, time: '16:00', location: 'LFC vs Brentford', note: 'MATCH DAY\nHospitality Pass (Digital Ticket)' }
-            ],
-            '5/26': [
-              { id: 9, time: '13:30', location: 'Wes Anderson Exhibition', note: 'Design Museum\nBooking Ref: DA-WA-2026' },
-              { id: 10, time: '20:00', location: 'Dinner @ OMA', note: 'Borough Market 2F\nConfirmed (Table for 1)' }
-            ],
-            '5/27': [
-              { id: 11, time: '12:45', location: 'Young V&A (Inside Aardman)', note: 'Bethnal Green\nTicket: YVA-ARD-01' },
-              { id: 12, time: '20:00', location: 'Dinner @ The Wolseley', note: 'Piccadilly\nReservation: WLS-8890' }
-            ],
-            '5/28': [{ id: 13, time: '09:00', location: 'Gatwick Depart (BCN)', note: 'Flight: BA8089\nTerminal: South (LGW)' }]
+            '5/21': [{ id: 1, time: '12:25', location: 'Heathrow LHR', note: 'Elizabeth Line -> Ilford (£15.50)\nCheck-in Travelodge' }],
+            '5/23': [{ id: 3, time: '12:00', location: 'London to Liverpool', note: 'Avanti West Coast' }, { id: 4, time: '20:00', location: 'Dinner @ Belzan', note: 'Booking: BQ9QLVH6' }],
+            '5/24': [{ id: 5, time: '09:45', location: 'Anfield Stadium Tour', note: 'LFC-STA-26' }, { id: 6, time: '16:00', location: 'LFC vs Brentford', note: 'Match Day' }],
+            '5/26': [{ id: 8, time: '13:30', location: 'Wes Anderson', note: 'Design Museum' }, { id: 9, time: '20:00', location: 'Dinner @ OMA', note: 'Borough Market' }],
+            '5/27': [{ id: 10, time: '12:45', location: 'Young V&A', note: 'Inside Aardman' }, { id: 11, time: '20:00', location: 'Dinner @ The Wolseley', note: 'WLS-8890' }],
+            '5/28': [{ id: 12, time: '09:00', location: 'Fly to Barcelona', note: 'BA8089 (LGW South Terminal)' }],
+            '5/29': [{ id: 13, time: '10:00', location: 'Barcelona Exploration', note: 'BCN Day 1' }],
+            '5/30': [{ id: 14, time: '13:00', location: 'Gothic Quarter', note: 'Siesta & Tapas' }],
+            '5/31': [{ id: 15, time: '11:00', location: 'Sagrada Familia', note: 'Gaudi Mission' }],
+            '6/1': [{ id: 16, time: '15:00', location: 'Journey Home', note: 'Final Mission Control Clear' }]
           },
           Tickets: [
-            { id: 101, time: 'LFC', location: 'LFC vs Brentford', note: 'Anfield Hospitality Pass' },
-            { id: 102, time: 'TOUR', location: 'Anfield Stadium Tour', note: 'Ref: LFC-STA-26' },
-            { id: 103, time: 'EXHB', location: 'Wes Anderson (Design Museum)', note: 'Ref: DA-WA-2026' },
-            { id: 104, time: 'EXHB', location: 'Inside Aardman (Young V&A)', note: 'Ref: YVA-ARD-01' }
+            { id: 101, time: '5/24', location: 'LFC vs Brentford', note: 'Hospitality Pass' },
+            { id: 102, time: '5/24', location: 'Anfield Tour', note: 'Ref: LFC-STA-26' },
+            { id: 103, time: '5/26', location: 'Wes Anderson', note: 'Design Museum' },
+            { id: 104, time: '5/27', location: 'Inside Aardman', note: 'Young V&A' }
           ],
           Hotel: [
-            { id: 201, time: '5/21', location: 'Travelodge Ilford', note: 'Booking Ref: TL-1122' },
-            { id: 202, time: '5/23', location: 'Liverpool Stay (Match Day)', note: 'Hope Street Hotel (Ref: HSH-99)' },
-            { id: 203, time: '5/25', location: 'Finsbury Rose', note: 'London Base (5/25-5/28)' }
+            { id: 201, time: '5/21', location: 'Travelodge Ilford', note: 'London Arrival' },
+            { id: 202, time: '5/23', location: 'Hope Street Hotel', note: 'Liverpool' },
+            { id: 203, time: '5/25', location: 'Finsbury Rose', note: 'London Base' },
+            { id: 204, time: '5/28', location: 'Barcelona Stay', note: 'BCN Base' }
           ],
           Budget: [
-            { id: 301, time: 'LHR', location: 'Elizabeth Line', note: 'Fare: £15.50' },
-            { id: 302, time: 'DAILY', location: 'TFL Daily Cap (Z1-4)', note: 'Estimate: £11.70' },
-            { id: 303, time: 'MEALS', location: 'Dining Estimate', note: 'Belzan: £60\nOMA: £55\nSucre: £75' }
+            { id: 301, time: 'Z1-4', location: 'Elizabeth Line', note: '£15.50' },
+            { id: 302, time: 'CAP', location: 'London Daily Cap', note: '£11.70' },
+            { id: 303, time: 'BCN', location: 'Barcelona Budget', note: 'Spreadsheet Sync' }
           ],
           Food: [
-            { id: 401, time: '5/23 20:00', location: 'Belzan', note: 'Code: BQ9QLVH6 (8pm)' },
-            { id: 402, time: '5/26 20:00', location: 'OMA', note: 'Borough Market 2F' },
-            { id: 403, time: '5/27 20:00', location: 'The Wolseley', note: 'Reservation: WLS-8890' },
-            { id: 404, time: 'CONFIRM', location: 'Sucre', note: 'Soho (Sucre Reservation Ref: SUC-11)' }
+            { id: 401, time: '5/23', location: 'Belzan', note: 'Ref: BQ9QLVH6' },
+            { id: 402, time: '5/26', location: 'OMA', note: 'Borough Market' },
+            { id: 403, time: '5/27', location: 'The Wolseley', note: 'WLS-8890' }
           ],
           Traffic: [
-            { id: 501, time: 'TRAIN', location: 'Euston to Lime Street', note: 'Avanti West Coast (Ref: AV-LPL)' },
-            { id: 502, time: 'LGW', location: 'Gatwick Express', note: 'Victoria to LGW Terminal South' }
+            { id: 501, time: '5/23', location: 'Euston -> Lime St', note: 'Train' },
+            { id: 502, time: '5/28', location: 'LGW -> BCN', note: 'Flight BA8089' }
           ],
           List: []
         });
@@ -220,6 +193,9 @@
         const getRawData = (label) => label === 'Plan' ? (travelData.value.Plan[currentDate.value] || []) : (travelData.value[label] || []);
         const getSortedData = (label) => {
           const data = getRawData(label);
+          if (['Tickets', 'Hotel', 'Food', 'Traffic'].includes(label)) {
+             return [...data].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
+          }
           return label === 'Plan' ? [...data].sort((a, b) => (a.time || "").localeCompare(b.time || "")) : data;
         };
         
@@ -235,16 +211,12 @@
         const addItem = (label) => getRawData(label).push({ id: Date.now(), time: '', location: '', note: '' });
         const removeItem = (label, idx) => getRawData(label).splice(idx, 1);
         const goTo = (idx) => swiperInstance.value.slideTo(idx);
-        const triggerLogoJoy = () => {
-          isWiggling.value = true;
-          setTimeout(() => isWiggling.value = false, 500);
-        };
+        const triggerLogoJoy = () => { isWiggling.value = true; setTimeout(() => isWiggling.value = false, 500); };
 
         onMounted(() => {
           db.ref('universalData').on('value', (s) => { if(s.val()) travelData.value = s.val(); loading.value = false; });
           swiperInstance.value = new Swiper(".mySwiper", { 
-            speed: 350, 
-            resistanceRatio: 0.85,
+            speed: 350, resistanceRatio: 0.85,
             on: { slideChange: function() { activeIdx.value = this.activeIndex; } } 
           });
         });
