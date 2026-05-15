@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Euro 2026 Adventure</title>
-  
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
@@ -12,7 +11,6 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap" rel="stylesheet">
 
   <script>
     tailwind.config = {
@@ -33,20 +31,20 @@
     body { background-color: #E0F2FE; background-image: radial-gradient(#fff 10%, transparent 10%); background-size: 30px 30px; }
     [v-cloak] { display: none; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    
-    /* Logo 亮光效果 */
-    .logo-glow { filter: drop-shadow(0 0 10px rgba(255,255,255,0.3)); }
   </style>
 </head>
-<body class="h-screen overflow-hidden">
+<body class="h-screen overflow-hidden text-slate-700">
 
   <div id="app" class="h-full flex flex-col" v-cloak>
-    <header class="bg-toyBlue pt-4 pb-3 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
+    <header class="bg-toyBlue pt-6 pb-4 px-4 text-center shadow-lg border-b-[6px] border-toyYellow shrink-0 relative z-50">
       <div class="flex flex-col items-center justify-center">
-        <img src="pixelframe-design_26fq9zkc.jpg" alt="Euro 2026" class="h-16 logo-glow mb-1 object-contain">
+        <img src="euro2026_logo.png" alt="Euro 2026" class="h-16 drop-shadow-[0_4px_6px_rgba(0,0,0,0.3)] mb-1 object-contain">
         <p class="text-white text-[10px] font-black tracking-widest uppercase opacity-90 italic">Adventure is better shared.</p>
       </div>
-      <div v-if="loading" class="absolute right-4 top-10 text-[8px] text-white animate-pulse">📡 SYNC</div>
+      <div v-if="loading" class="absolute right-4 top-10 flex items-center gap-1">
+        <div class="w-2 h-2 bg-toyGreen rounded-full animate-ping"></div>
+        <span class="text-[8px] text-white font-bold uppercase">Syncing</span>
+      </div>
     </header>
 
     <div class="swiper mySwiper flex-1 w-full pt-2">
@@ -54,39 +52,25 @@
         
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyYellow">
-            <div class="sticky top-0 bg-white z-20 pb-2">
-              <div class="flex justify-between items-center mb-3">
-                <h2 class="text-xl font-black text-toyYellow">行程</h2>
-                <button @click="toggleEdit('itinerary')">
-                  <i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i>
-                </button>
-              </div>
-              <div class="flex gap-2 overflow-x-auto no-scrollbar py-1">
-                <button v-for="date in availableDates" @click="currentDate = date" 
-                        :class="currentDate === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">
-                  {{ date }}
-                </button>
-              </div>
+            <div class="sticky top-0 bg-white z-20 pb-2 flex justify-between items-center mb-3">
+              <h2 class="text-xl font-black text-toyYellow uppercase">Itinerary</h2>
+              <button @click="toggleEdit('itinerary')"><i :class="isEditing.itinerary ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
-            
-            <div class="mt-4 space-y-2">
-              <div v-if="isEditing.itinerary">
-                <div v-for="(item, idx) in travelData.itinerary[currentDate]" class="p-3 bg-slate-50 rounded-xl mb-2 relative">
-                  <div class="flex gap-2 mb-2">
-                    <input v-model="item.time" class="edit-input w-24" placeholder="時間">
-                    <input v-model="item.activity" class="edit-input flex-1" placeholder="項目">
-                  </div>
-                  <input v-model="item.loc" class="edit-input mb-0" placeholder="地點">
-                  <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-1 right-2 text-toyRed">✕</button>
-                </div>
-                <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody">+ 新增行程</button>
+            <div class="flex gap-2 overflow-x-auto no-scrollbar mb-4 py-1">
+              <button v-for="date in availableDates" @click="currentDate = date" :class="currentDate === date ? 'date-btn-active' : 'date-btn-inactive'" class="date-btn">{{ date }}</button>
+            </div>
+            <div v-if="isEditing.itinerary" class="space-y-3">
+              <div v-for="(item, idx) in travelData.itinerary[currentDate]" class="p-3 bg-slate-50 rounded-xl relative border-2 border-dashed border-slate-100">
+                <input v-model="item.time" class="edit-input w-24" placeholder="Time">
+                <input v-model="item.activity" class="edit-input" placeholder="Activity">
+                <button @click="travelData.itinerary[currentDate].splice(idx, 1)" class="absolute top-2 right-2 text-toyRed">✕</button>
               </div>
-              <div v-else v-for="item in travelData.itinerary[currentDate]" class="flex gap-4 p-3 border-b border-slate-50">
-                <span class="text-toyWoody font-black text-xs w-12">{{item.time}}</span>
-                <div>
-                  <p class="font-bold text-sm text-slate-700">{{item.activity}}</p>
-                  <p v-if="item.loc" class="text-[10px] text-slate-400 font-bold mt-1">{{item.loc}}</p>
-                </div>
+              <button @click="addItem('itinerary')" class="w-full py-2 border-2 border-dashed border-toyYellow rounded-xl text-xs font-black text-toyWoody bg-yellow-50/50">+ ADD PLAN</button>
+            </div>
+            <div v-else class="space-y-1">
+              <div v-for="item in travelData.itinerary[currentDate]" class="flex gap-4 p-4 border-b border-slate-50 items-start hover:bg-slate-50 rounded-2xl transition-all">
+                <span class="text-toyWoody font-black text-xs w-12 pt-1">{{item.time}}</span>
+                <p class="font-bold text-sm leading-relaxed">{{item.activity}}</p>
               </div>
             </div>
           </div>
@@ -94,78 +78,83 @@
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyPurple">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-              <h2 class="text-xl font-black text-toyPurple">航班</h2>
-              <button @click="toggleEdit('flight')"><i :class="isEditing.flight ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
-            </div>
-            <div v-for="(f, idx) in travelData.flights" class="mb-4 p-4 bg-purple-50 rounded-3xl relative border border-purple-100">
+            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyPurple uppercase">Flight</h2><button @click="toggleEdit('flight')"><i :class="isEditing.flight ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
+            <div v-for="(f, idx) in travelData.flights" class="mb-3 p-4 bg-purple-50 rounded-3xl relative border border-purple-100">
               <div v-if="isEditing.flight">
-                <input v-model="f.no" class="edit-input" placeholder="航班號">
-                <input v-model="f.info" class="edit-input" placeholder="起飛/抵達資訊">
+                <input v-model="f.no" class="edit-input" placeholder="Flight No."><input v-model="f.info" class="edit-input" placeholder="Info">
                 <button @click="travelData.flights.splice(idx, 1)" class="absolute top-2 right-4 text-toyRed">✕</button>
               </div>
-              <div v-else class="text-center">
-                <p class="text-2xl font-black text-toyPurple">{{f.no}}</p>
-                <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{{f.info}}</p>
-              </div>
+              <div v-else class="text-center"><p class="text-2xl font-black text-toyPurple">{{f.no || 'TBC'}}</p><p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-widest">{{f.info}}</p></div>
             </div>
-            <button v-if="isEditing.flight" @click="travelData.flights.push({no:'',info:''})" class="w-full py-2 border-2 border-dashed border-toyPurple rounded-xl text-xs font-black">+ 新增航班</button>
+            <button v-if="isEditing.flight" @click="travelData.flights.push({no:'',info:''})" class="w-full py-2 border-2 border-dashed border-toyPurple rounded-xl text-xs font-black text-toyPurple bg-purple-50/50">+ ADD FLIGHT</button>
           </div>
         </div>
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyGreen">
-            <div class="flex justify-between items-center mb-4 border-b pb-2">
-              <h2 class="text-xl font-black text-toyGreen">酒店</h2>
-              <button @click="toggleEdit('hotel')"><i :class="isEditing.hotel ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
-            </div>
-            <div v-for="(h, idx) in travelData.hotels" class="mb-4 p-4 bg-green-50 rounded-3xl relative border border-green-100">
+            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyGreen uppercase">Hotel</h2><button @click="toggleEdit('hotel')"><i :class="isEditing.hotel ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
+            <div v-for="(h, idx) in travelData.hotels" class="mb-3 p-4 bg-green-50 rounded-3xl relative border border-green-100">
               <div v-if="isEditing.hotel">
-                <input v-model="h.name" class="edit-input" placeholder="酒店名稱">
-                <textarea v-model="h.addr" class="edit-input h-20" placeholder="地址 / 入住時間"></textarea>
+                <input v-model="h.name" class="edit-input" placeholder="Hotel Name"><textarea v-model="h.addr" class="edit-input" placeholder="Address/Notes"></textarea>
                 <button @click="travelData.hotels.splice(idx, 1)" class="absolute top-2 right-4 text-toyRed">✕</button>
               </div>
-              <div v-else>
-                <p class="font-black text-toyGreen text-lg">{{h.name}}</p>
-                <p class="text-[10px] font-bold text-slate-500 mt-2 leading-relaxed whitespace-pre-line">{{h.addr}}</p>
-              </div>
+              <div v-else><p class="font-black text-toyGreen text-lg">{{h.name || 'TBC'}}</p><p class="text-[10px] font-bold mt-2 text-slate-500 whitespace-pre-line leading-relaxed">{{h.addr}}</p></div>
             </div>
-            <button v-if="isEditing.hotel" @click="travelData.hotels.push({name:'',addr:''})" class="w-full py-2 border-2 border-dashed border-toyGreen rounded-xl text-xs font-black">+ 新增住宿</button>
+            <button v-if="isEditing.hotel" @click="travelData.hotels.push({name:'',addr:''})" class="w-full py-2 border-2 border-dashed border-toyGreen rounded-xl text-xs font-black text-toyGreen bg-green-50/50">+ ADD HOTEL</button>
+          </div>
+        </div>
+
+        <div class="swiper-slide px-4">
+          <div class="card-toy border-l-[12px] border-toyBlue">
+            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyBlue uppercase">Map Notes</h2><button @click="toggleEdit('map')"><i :class="isEditing.map ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
+            <textarea v-if="isEditing.map" v-model="travelData.mapNotes" class="edit-input h-64 text-xs" placeholder="Paste coordinates or transport tips..."></textarea>
+            <div v-else class="text-sm font-bold whitespace-pre-line text-slate-600 leading-relaxed">{{travelData.mapNotes || 'No notes yet.'}}</div>
+          </div>
+        </div>
+
+        <div class="swiper-slide px-4">
+          <div class="card-toy border-l-[12px] border-toyWoody">
+            <div class="flex justify-between items-center mb-4 border-b pb-2"><h2 class="text-xl font-black text-toyWoody uppercase">Packing</h2><button @click="toggleEdit('packing')"><i :class="isEditing.packing ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button></div>
+            <div v-for="(item, idx) in travelData.packing" class="flex items-center gap-3 p-3 border-b border-slate-50">
+              <i @click="item.done = !item.done; saveToFirebase()" :class="item.done ? 'fas fa-check-circle text-toyGreen shadow-sm' : 'far fa-circle text-slate-200'" class="cursor-pointer"></i>
+              <input v-if="isEditing.packing" v-model="item.name" class="edit-input !mb-0 flex-1">
+              <span v-else @click="item.done = !item.done; saveToFirebase()" :class="{'line-through text-slate-300': item.done}" class="font-bold text-sm cursor-pointer">{{item.name}}</span>
+              <button v-if="isEditing.packing" @click="travelData.packing.splice(idx, 1)" class="text-toyRed px-2">✕</button>
+            </div>
+            <button v-if="isEditing.packing" @click="travelData.packing.push({name:'',done:false})" class="w-full mt-4 py-2 border-2 border-dashed border-toyWoody rounded-xl text-xs font-black bg-orange-50/30">+ ADD ITEM</button>
           </div>
         </div>
 
         <div class="swiper-slide px-4">
           <div class="card-toy border-l-[12px] border-toyPink">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-              <div class="flex items-center gap-2">
-                <h2 class="text-xl font-black text-toyPink">預算</h2>
-                <select v-model="travelData.currency" class="bg-pink-100 text-toyPink text-[10px] font-black rounded px-1 outline-none border border-pink-200">
-                  <option value="£">£ (GBP)</option>
-                  <option value="$">$ (USD)</option>
-                  <option value="€">€ (EUR)</option>
-                  <option value="HK$">HK$</option>
-                </select>
-              </div>
+              <h2 class="text-xl font-black text-toyPink uppercase">Budget</h2>
               <button @click="toggleEdit('expense')"><i :class="isEditing.expense ? 'fas fa-check-circle text-toyGreen text-2xl' : 'fas fa-edit text-slate-200 text-xl'"></i></button>
             </div>
-            <div v-if="isEditing.expense" class="space-y-2">
-              <div v-for="(item, idx) in travelData.expenses" class="flex gap-2">
-                <input v-model="item.name" class="edit-input flex-1" placeholder="項目">
-                <input v-model.number="item.cost" class="edit-input w-20" type="number" placeholder="金額">
-                <button @click="travelData.expenses.splice(idx, 1)" class="text-toyRed">✕</button>
+            <div v-for="(item, idx) in travelData.expenses" class="mb-3 p-3 bg-slate-50 rounded-2xl relative">
+              <div v-if="isEditing.expense" class="space-y-2">
+                <input v-model="item.name" class="edit-input !mb-0" placeholder="Expense name">
+                <div class="flex gap-2">
+                  <select v-model="item.currency" class="bg-white border-2 border-slate-100 rounded-xl px-2 font-bold text-[10px] outline-none">
+                    <option value="£">£</option><option value="$">$</option><option value="€">€</option><option value="HK$">HK$</option>
+                  </select>
+                  <input v-model.number="item.cost" type="number" class="edit-input !mb-0 flex-1 text-right" placeholder="Cost">
+                </div>
+                <button @click="travelData.expenses.splice(idx, 1)" class="absolute top-1 right-2 text-toyRed text-xs">✕</button>
               </div>
-              <button @click="travelData.expenses.push({name:'',cost:0})" class="w-full py-2 border-2 border-dashed border-toyPink rounded-xl text-xs font-black">+ 新增支出</button>
-            </div>
-            <div v-else>
-              <div v-for="item in travelData.expenses" class="flex justify-between p-3 border-b border-slate-50 text-sm font-bold">
-                <span class="text-slate-600">{{item.name}}</span>
-                <span class="text-toyPink">{{travelData.currency}}{{item.cost}}</span>
-              </div>
-              <div class="mt-4 p-5 bg-pink-50 rounded-3xl flex justify-between items-baseline font-black text-toyPink border border-pink-100">
-                <span class="text-xs uppercase opacity-60">Total Amount</span>
-                <span class="text-2xl">{{travelData.currency}}{{ travelData.expenses.reduce((s, e) => s + e.cost, 0) }}</span>
+              <div v-else class="flex justify-between items-center font-bold">
+                <span class="text-slate-600 text-sm">{{item.name}}</span>
+                <span class="text-toyPink text-sm">{{item.currency}}{{item.cost}}</span>
               </div>
             </div>
+            <div v-if="!isEditing.expense && travelData.expenses.length > 0" class="mt-6 space-y-2 border-t pt-4">
+              <p class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-2">Total Summary</p>
+              <div v-for="(val, cur) in calculateTotals()" class="p-4 bg-pink-50 rounded-2xl flex justify-between items-baseline border border-pink-100">
+                <span class="text-[10px] font-black text-toyPink opacity-60 uppercase">Total {{cur}}</span>
+                <span class="text-xl font-black text-toyPink">{{cur}}{{val}}</span>
+              </div>
+            </div>
+            <button v-if="isEditing.expense" @click="travelData.expenses.push({name:'',cost:0,currency:'£'})" class="w-full mt-4 py-3 border-2 border-dashed border-toyPink rounded-2xl text-xs font-black bg-pink-50/30">+ ADD EXPENSE</button>
           </div>
         </div>
 
@@ -173,22 +162,18 @@
     </div>
 
     <nav class="bg-white h-20 flex justify-around items-center border-t shrink-0 pb-2 z-50">
-      <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-alt text-xl"></i><span class="text-[9px] font-black mt-1 uppercase">Itinerary</span></div>
-      <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-plane text-xl"></i><span class="text-[9px] font-black mt-1 uppercase">Flight</span></div>
-      <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-hotel text-xl"></i><span class="text-[9px] font-black mt-1 uppercase">Hotel</span></div>
-      <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-piggy-bank text-xl"></i><span class="text-[9px] font-black mt-1 uppercase">Budget</span></div>
+      <div @click="goTo(0)" :class="{active: activeIdx === 0}" class="nav-item"><i class="fas fa-calendar-alt text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Itinerary</span></div>
+      <div @click="goTo(1)" :class="{active: activeIdx === 1}" class="nav-item"><i class="fas fa-plane text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Flight</span></div>
+      <div @click="goTo(2)" :class="{active: activeIdx === 2}" class="nav-item"><i class="fas fa-hotel text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Hotel</span></div>
+      <div @click="goTo(3)" :class="{active: activeIdx === 3}" class="nav-item"><i class="fas fa-map-marked-alt text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Map</span></div>
+      <div @click="goTo(4)" :class="{active: activeIdx === 4}" class="nav-item"><i class="fas fa-suitcase text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Pack</span></div>
+      <div @click="goTo(5)" :class="{active: activeIdx === 5}" class="nav-item"><i class="fas fa-piggy-bank text-xl"></i><span class="text-[8px] font-black mt-1 uppercase">Budget</span></div>
     </nav>
   </div>
 
   <script>
     const { createApp, ref, onMounted } = Vue
-    const firebaseConfig = {
-      apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA",
-      authDomain: "toystorytravel.firebaseapp.com",
-      projectId: "toystorytravel",
-      databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" 
-    };
-
+    const firebaseConfig = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", projectId: "toystorytravel", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -198,48 +183,42 @@
         const activeIdx = ref(0);
         const loading = ref(true);
         const currentDate = ref('5/21');
-        const availableDates = ['5/21', '5/22', '5/23', '5/24', '5/25', '5/26', '5/27', '5/28'];
-        const isEditing = ref({ itinerary:false, flight:false, hotel:false, expense:false });
+        const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28'];
+        const isEditing = ref({ itinerary:false, flight:false, hotel:false, map:false, packing:false, expense:false });
 
         const travelData = ref({
-          itinerary: { '5/21': [{time:'10:00', activity:'Arrive LHR', loc:''}], '5/22':[], '5/23':[], '5/24':[], '5/25':[], '5/26':[], '5/27':[], '5/28':[] },
-          flights: [{ no: 'BA8089', info: 'LHR -> BCN' }],
-          hotels: [{ name: 'Toy Hotel', addr: 'Liverpool' }],
-          expenses: [{ name: 'Tickets', cost: 100 }],
-          currency: '£'
+          itinerary: { '5/21':[], '5/22':[], '5/23':[], '5/24':[], '5/25':[], '5/26':[], '5/27':[], '5/28':[] },
+          flights: [], hotels: [], packing: [], expenses: [], mapNotes: ''
         });
 
         const loadFirebase = () => {
-          db.ref('travelData').on('value', (s) => {
-            if (s.val()) travelData.value = s.val();
-            loading.value = false;
-          });
+          db.ref('travelData').on('value', (s) => { if (s.val()) travelData.value = s.val(); loading.value = false; });
         };
-
         const saveToFirebase = () => {
           loading.value = true;
           db.ref('travelData').set(travelData.value).then(() => loading.value = false);
         };
-
         const toggleEdit = (part) => {
           isEditing.value[part] = !isEditing.value[part];
           if (!isEditing.value[part]) saveToFirebase();
         };
-
-        const addItem = (type) => {
-          if (type === 'itinerary') travelData.value.itinerary[currentDate.value].push({time:'12:00', activity:'', loc:''});
-        };
-
+        const addItem = (type) => { if (type === 'itinerary') travelData.value.itinerary[currentDate.value].push({time:'12:00', activity:''}); };
         const goTo = (idx) => { swiperRef.value.slideTo(idx); activeIdx.value = idx; };
+        
+        const calculateTotals = () => {
+          const totals = {};
+          travelData.value.expenses.forEach(i => {
+            if (!totals[i.currency]) totals[i.currency] = 0;
+            totals[i.currency] += (i.cost || 0);
+          });
+          return totals;
+        };
 
         onMounted(() => {
           loadFirebase();
-          swiperRef.value = new Swiper(".mySwiper", {
-            on: { slideChange: function() { activeIdx.value = this.activeIndex; } }
-          });
+          swiperRef.value = new Swiper(".mySwiper", { on: { slideChange: function() { activeIdx.value = this.activeIndex; } } });
         });
-
-        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem }
+        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, addItem, saveToFirebase, calculateTotals }
       }
     }).mount('#app')
   </script>
