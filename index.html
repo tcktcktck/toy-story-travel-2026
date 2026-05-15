@@ -3,8 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <title>Euro 2026 | Mission Control V5.9.4</title>
+  <title>Euro 2026 | Mission Control V5.9.9</title>
   
+  <style>
+    [v-cloak] { display: none !important; }
+    .loading-screen { 
+      position: fixed; inset: 0; background: #2A75B3; 
+      z-index: 9999; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; color: white;
+      font-family: sans-serif; transition: opacity 0.4s ease;
+    }
+  </style>
+
   <link href="https://api.fontshare.com/v2/css?f[]=cabinet-grotesk@800,900&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -24,14 +34,9 @@
           colors: { toyBlue: '#2A75B3', toyYellow: '#F1C40F', toyRed: '#E74C3C', toyGreen: '#2ECC71' },
           borderRadius: { 'toy': '2.5rem' },
           keyframes: {
-            wiggle: {
-              '0%, 100%': { transform: 'rotate(-3deg)' },
-              '50%': { transform: 'rotate(3deg)' },
-            }
+            wiggle: { '0%, 100%': { transform: 'rotate(-3deg)' }, '50%': { transform: 'rotate(3deg)' } }
           },
-          animation: {
-            wiggle: 'wiggle 0.3s ease-in-out 2'
-          }
+          animation: { wiggle: 'wiggle 0.3s ease-in-out 2' }
         }
       }
     }
@@ -39,47 +44,51 @@
 
   <style type="text/tailwindcss">
     @layer components {
-      .app-container { @apply h-dvh flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden; }
-      .card-toy { @apply bg-white dark:bg-slate-800 rounded-toy p-6 shadow-2xl flex flex-col h-[calc(100%-32px)] mx-4 mt-2 border-t-[10px] relative transition-all duration-300 border-toyYellow; }
+      .app-container { @apply fixed inset-0 flex flex-col bg-slate-50 dark:bg-slate-900 overflow-hidden; }
+      .card-toy { @apply bg-white dark:bg-slate-800 rounded-toy p-6 shadow-2xl flex flex-col h-[calc(100%-1rem)] mx-4 mt-2 border-t-[12px] relative transition-all duration-300; }
       .event-card { @apply bg-slate-50 dark:bg-slate-700/40 border border-slate-100 dark:border-slate-600 rounded-2xl p-4 mb-3 flex gap-4 active:scale-[0.96] transition-all; }
       .input-toy { @apply w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm font-bold mb-2 focus:ring-2 focus:ring-toyBlue outline-none dark:text-white; }
       .btn-icon { @apply w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-all active:scale-90; }
     }
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    [v-cloak] { display: none; }
     .list-enter-active, .list-leave-active { transition: all 0.3s ease; }
     .list-enter-from, .list-leave-to { opacity: 0; transform: translateY(15px); }
   </style>
 </head>
 <body class="antialiased">
 
+  <div id="init-loader" class="loading-screen">
+    <i class="fas fa-circle-notch animate-spin text-4xl mb-4"></i>
+    <p class="font-black italic uppercase tracking-widest text-[10px]">Establishing Link...</p>
+  </div>
+
   <div id="app" class="app-container" v-cloak>
     <header class="bg-toyBlue dark:bg-slate-950 shrink-0 flex flex-col items-center justify-center border-b-4 border-toyYellow z-50 shadow-xl relative" style="height: 100px;">
-      <img src="logo.png" 
+      <img src="https://raw.githubusercontent.com/tcktcktck/toy-story-travel-2026/62a27a1f7851da08609825d8539050f5defadb29/logo.png" 
            alt="Logo" @click="triggerLogoJoy"
            class="w-14 h-14 object-contain active:scale-95 transition-transform"
            :class="{'animate-wiggle': isWiggling}"
-           onerror="this.onerror=null; this.src='https://cdn-icons-png.flaticon.com/512/3063/3063822.png';">
+           onerror="this.src='https://cdn-icons-png.flaticon.com/512/3063/3063822.png';">
       <h1 class="text-white font-black italic uppercase text-[12px] tracking-widest opacity-60 mt-1">Mission Control • 2026</h1>
     </header>
 
     <main class="flex-1 overflow-hidden relative">
       <div class="swiper mySwiper h-full">
         <div class="swiper-wrapper">
-          <div v-for="(page, pIdx) in navItems" :key="page.label" class="swiper-slide py-4">
-            <div class="card-toy" :style="{ borderColor: page.color }">
-              <div class="flex justify-between items-center mb-6">
+          <div v-for="(page, pIdx) in navItems" :key="page.label" class="swiper-slide h-full py-4">
+            <div class="card-toy" :style="{ borderTopColor: page.color }">
+              <div class="flex justify-between items-center mb-6 shrink-0">
                 <h2 class="font-black italic text-3xl uppercase tracking-tighter" :style="{ color: page.color }">{{ page.label }}</h2>
-                <button @click="toggleEdit(page.label)" :class="isEditing[page.label] ? 'bg-toyGreen' : 'bg-slate-100 dark:bg-slate-700'" class="btn-icon">
-                  <i :class="isEditing[page.label] ? 'fas fa-check text-white' : 'fas fa-pen text-slate-400'"></i>
+                <button @click="toggleEdit(page.label)" :class="isEditing[page.label] ? 'bg-toyGreen text-white' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'" class="btn-icon">
+                  <i :class="isEditing[page.label] ? 'fas fa-check' : 'fas fa-pen'"></i>
                 </button>
               </div>
 
               <div class="flex-1 overflow-y-auto no-scrollbar">
-                <div v-if="page.label === 'Plan'" class="flex gap-2 overflow-x-auto no-scrollbar mb-6 py-1 snap-x">
+                <div v-if="page.label === 'Plan'" class="flex gap-2 overflow-x-auto no-scrollbar mb-6 py-1 snap-x swiper-no-swiping touch-pan-x">
                   <button v-for="date in availableDates" :key="date" @click="currentDate = date" 
                     :class="currentDate === date ? 'bg-toyYellow text-white shadow-lg' : 'bg-slate-100 dark:bg-slate-700 text-slate-400'" 
-                    class="px-5 py-3 rounded-2xl text-[13px] font-black shrink-0 snap-center uppercase">
+                    class="px-5 py-3 rounded-2xl text-[13px] font-black shrink-0 snap-center uppercase transition-all">
                     {{date}}
                   </button>
                 </div>
@@ -93,11 +102,11 @@
                   </div>
 
                   <template v-if="isEditing[page.label]">
-                    <div v-for="(item, idx) in getRawData(page.label)" :key="'edit-' + page.label + idx" class="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl mb-4 relative">
+                    <div v-for="(item, idx) in getRawData(page.label)" :key="'edit-' + page.label + idx" class="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl mb-4 relative border border-slate-200 dark:border-slate-700">
                       <input v-model="item.time" class="input-toy" placeholder="TIME (e.g. 14:00)">
                       <input v-model="item.location" class="input-toy" placeholder="MISSION/LOCATION">
                       <textarea v-model="item.note" class="input-toy mb-0 text-xs" placeholder="NOTES" rows="2"></textarea>
-                      <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-toyRed text-white w-8 h-8 rounded-full border-2 border-white shadow-lg flex items-center justify-center">×</button>
+                      <button @click="removeItem(page.label, idx)" class="absolute -top-2 -right-2 bg-toyRed text-white w-8 h-8 rounded-full border-2 border-white shadow-lg">×</button>
                     </div>
                     <button @click="addItem(page.label)" :key="'add-' + page.label" class="w-full py-4 border-2 border-dashed rounded-2xl font-black text-xs uppercase" :style="{ color: page.color, borderColor: page.color }">+ Add Mission</button>
                   </template>
@@ -124,18 +133,26 @@
       </div>
     </main>
 
-    <nav class="bg-white dark:bg-slate-950 flex border-t dark:border-slate-800 shrink-0 z-50" style="height: 90px; padding-bottom: env(safe-area-inset-bottom);">
+    <nav class="bg-white dark:bg-slate-950 flex border-t-2 border-slate-100 dark:border-slate-800 shrink-0 z-[100] relative" 
+         style="min-height: 90px; padding-bottom: env(safe-area-inset-bottom);">
       <div v-for="(nav, idx) in navItems" :key="nav.label" @click="goTo(idx)" 
-           class="flex-1 flex flex-col items-center justify-center cursor-pointer" :style="{ opacity: activeIdx === idx ? 1 : 0.3 }">
-        <i :class="nav.icon" class="text-xl mb-1"></i>
-        <span class="text-[12px] font-black uppercase tracking-tighter">{{ nav.label }}</span>
+           class="flex-1 flex flex-col items-center justify-center cursor-pointer min-h-[90px] transition-all" 
+           :style="{ opacity: activeIdx === idx ? 1 : 0.3 }">
+        <i :class="nav.icon" class="text-xl mb-1" :style="{ color: activeIdx === idx ? nav.color : '' }"></i>
+        <span class="text-[10px] font-black uppercase tracking-tighter" :style="{ color: activeIdx === idx ? nav.color : '' }">{{ nav.label }}</span>
       </div>
     </nav>
   </div>
 
   <script>
     const { createApp, ref, onMounted } = Vue;
-    const FIREBASE_CONFIG = { apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", authDomain: "toystorytravel.firebaseapp.com", databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" };
+
+    // Firebase 配置
+    const FIREBASE_CONFIG = { 
+      apiKey: "AIzaSyA9rkD3I-5PX7Gszl41SlPCYALIeil2mkA", 
+      authDomain: "toystorytravel.firebaseapp.com", 
+      databaseURL: "https://toystorytravel-default-rtdb.firebaseio.com/" 
+    };
     firebase.initializeApp(FIREBASE_CONFIG);
     const db = firebase.database();
 
@@ -143,12 +160,14 @@
       setup() {
         const swiperInstance = ref(null);
         const activeIdx = ref(0);
-        const loading = ref(true);
         const currentDate = ref('5/21');
         const isWiggling = ref(false);
         const isEditing = ref({});
         const availableDates = ['5/21','5/22','5/23','5/24','5/25','5/26','5/27','5/28','5/29','5/30','5/31','6/1','6/2','6/3','6/4','6/5','6/6','6/7'];
-        const travelData = ref({ Plan: {}, Tickets: [], Hotel: [], Budget: [], Food: [], Traffic: [], List: [] });
+        
+        const travelData = ref({ 
+          Plan: {}, Tickets: [], Hotel: [], Budget: [], Food: [], Traffic: [], List: [] 
+        });
 
         const navItems = [
           { label: 'Plan', icon: 'fas fa-map-marked-alt', color: '#F1C40F' },
@@ -160,7 +179,10 @@
           { label: 'List', icon: 'fas fa-clipboard-list', color: '#16A085' }
         ];
 
-        const getRawData = (label) => label === 'Plan' ? (travelData.value.Plan[currentDate.value] || []) : (travelData.value[label] || []);
+        const getRawData = (label) => {
+          return label === 'Plan' ? (travelData.value.Plan[currentDate.value] || []) : (travelData.value[label] || []);
+        };
+
         const getSortedData = (label) => {
           const data = getRawData(label);
           if (label === 'Plan') return [...data].sort((a, b) => (a.time || "").localeCompare(b.time || ""));
@@ -169,18 +191,25 @@
         
         const toggleEdit = async (label) => {
           if (isEditing.value[label]) {
-            loading.value = true;
+            // 保存到 Firebase
             await db.ref('universalData').set(JSON.parse(JSON.stringify(travelData.value)));
             isEditing.value[label] = false;
-            loading.value = false;
-          } else { isEditing.value[label] = true; }
+          } else { 
+            isEditing.value[label] = true; 
+          }
         };
 
         const addItem = (label) => {
-          if (label === 'Plan' && !travelData.value.Plan[currentDate.value]) travelData.value.Plan[currentDate.value] = [];
+          if (label === 'Plan' && !travelData.value.Plan[currentDate.value]) {
+            travelData.value.Plan[currentDate.value] = [];
+          }
           getRawData(label).push({ id: Date.now(), time: '', location: '', note: '' });
         };
-        const removeItem = (label, idx) => getRawData(label).splice(idx, 1);
+
+        const removeItem = (label, idx) => {
+          getRawData(label).splice(idx, 1);
+        };
+
         const goTo = (idx) => swiperInstance.value.slideTo(idx);
         
         const triggerLogoJoy = () => { 
@@ -189,13 +218,33 @@
         };
 
         onMounted(() => {
-          db.ref('universalData').on('value', (s) => { if(s.val()) travelData.value = s.val(); loading.value = false; });
+          // Firebase 實時監聽
+          db.ref('universalData').on('value', (s) => { 
+            if(s.val()) travelData.value = s.val();
+            // 數據載入後隱藏 Loader
+            const loader = document.getElementById('init-loader');
+            if(loader) {
+              loader.style.opacity = '0';
+              setTimeout(() => loader.remove(), 400);
+            }
+          });
+          
+          // 初始化 Swiper
           swiperInstance.value = new Swiper(".mySwiper", { 
-            speed: 350, on: { slideChange: function() { activeIdx.value = this.activeIndex; } } 
+            speed: 350,
+            noSwiping: true,
+            noSwipingClass: 'swiper-no-swiping',
+            on: { 
+              slideChange: function() { activeIdx.value = this.activeIndex; } 
+            } 
           });
         });
 
-        return { travelData, isEditing, activeIdx, goTo, toggleEdit, loading, currentDate, availableDates, navItems, getSortedData, addItem, removeItem, triggerLogoJoy, isWiggling }
+        return { 
+          travelData, isEditing, activeIdx, goTo, toggleEdit, 
+          currentDate, availableDates, navItems, getSortedData, 
+          getRawData, addItem, removeItem, triggerLogoJoy, isWiggling 
+        }
       }
     }).mount('#app')
   </script>
